@@ -1,27 +1,36 @@
+
 name: Build Windows Installer
+
 on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
     tags: [ 'v*' ]
+
 permissions:
-  contents: read
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Install dependencies
         run: npm install
+
       - name: Build Windows Installer
         run: npm run dist
         env:
-            GH_TOKEN: ${{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}}
+          GH_TOKEN: ${{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}}
+
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
