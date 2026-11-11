@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -80,20 +80,19 @@ function configureAutoUpdates() {
         }
     });
 
-    autoUpdater.on('update-downloaded', async (info) => {
+    autoUpdater.on('update-downloaded', (info) => {
         const version = info.version || 'the latest version';
-        await dialog.showMessageBox(mainWindow, {
-            type: 'info',
-            title: 'Update Ready',
-            message: 'Version ' + version + ' has been downloaded successfully.',
-            detail: 'The application will now restart to install the update. Your saved invoices will be kept.',
-            buttons: ['Restart & Install'],
-            defaultId: 0,
-            noLink: true
-        });
 
         // The user already chose Download & Install in the update popup.
-        autoUpdater.quitAndInstall(true, true);
+        // Notify briefly, then install and restart automatically.
+        if (Notification.isSupported()) {
+            new Notification({
+                title: 'Alfajar Travel updated',
+                body: 'Version ' + version + ' is ready. The application is restarting now.'
+            }).show();
+        }
+
+        setTimeout(() => autoUpdater.quitAndInstall(true, true), 1500);
     });
 
     autoUpdater.on('error', (error) => {
