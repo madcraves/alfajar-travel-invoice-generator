@@ -7,7 +7,7 @@ on:
     tags: [ 'v*' ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -25,10 +25,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Windows Installer
+      # A version tag (for example v1.0.2) publishes a GitHub Release
+      # containing the installer and latest.yml required by auto-updates.
+      - name: Publish release for version tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm run dist -- --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Normal commits still produce a downloadable Actions artifact.
+      - name: Build installer for branch commits
+        if: "!startsWith(github.ref, 'refs/tags/v')"
         run: npm run dist -- --publish never
 
-      - name: Upload installer
+      - name: Upload installer artifact
+        if: "!startsWith(github.ref, 'refs/tags/v')"
         uses: actions/upload-artifact@v4
         with:
           name: Alfajar-Travel-Windows-Installer
