@@ -1,11 +1,14 @@
 {
   "name": "alfajar-travel-invoice-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Offline desktop invoice generator for Alfajar Travel UK",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
   },
   "devDependencies": {
     "electron": "^33.2.1",
@@ -22,6 +25,14 @@
       "preload.js",
       "index.html",
       "alfajar-logo.png"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "madcraves",
+        "repo": "alfajar-travel-invoice-generator",
+        "releaseType": "release"
+      }
     ],
     "win": {
       "target": "nsis"
