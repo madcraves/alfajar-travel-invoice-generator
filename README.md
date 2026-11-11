@@ -8,12 +8,21 @@ Offline Windows desktop invoice application built with Electron.
 - **Generated Invoices:** save invoices locally, reopen and edit them, print/export them, or delete them.
 - **Print and PDF export:** use the Windows print dialog or save a PDF.
 - **Local-only storage:** saved invoice records stay in the local application profile; they are not uploaded to a server.
+- **Automatic updates:** installed versions check GitHub Releases when the app opens and periodically while running. Users can choose **Download & Install** in the update popup; the app downloads the update and restarts to install it.
 
 ## Build the Windows installer using GitHub
 1. Open the repository's **Actions** tab.
 2. Run **Build Windows Installer** (or push a commit to the configured branch).
 3. Open the successful workflow run, scroll to **Artifacts**, and download `Alfajar-Travel-Windows-Installer`.
 4. Extract the artifact to get the Windows `.exe` installer.
+
+## Publish an update release
+1. Increase the `version` in `package.json` (for example, from `1.0.1` to `1.0.2`).
+2. Commit and push the change to the default branch.
+3. Create and push a matching version tag, for example `v1.0.2`.
+4. The **Build Windows Installer** workflow publishes a GitHub Release with the installer and update metadata. Installed copies then detect it automatically.
+
+The tag version must match the `package.json` version. GitHub Releases must remain publicly accessible so installed copies can check and download updates without a GitHub login.
 
 ## Build locally (optional)
 Install Node.js 20 LTS, then run:
