@@ -175,7 +175,7 @@ ipcMain.handle('save-email-settings', async (_event, settings) => {
 ipcMain.handle('send-invoice-email', async (event, payload) => {
     const settings = readEmailSettings();
     if (!settings.fromEmail || !settings.smtpHost || !settings.smtpUser || !settings.password) throw new Error('Please configure and save your Alfajar Travel email settings first.');
-    if (!payload || !/^\\S+@\\S+\\.\\S+$/.test(String(payload.to || ''))) throw new Error('Enter a valid lead passenger email address.');
+    if (!payload || !/^\S+@\S+\.\S+$/.test(String(payload.to || ''))) throw new Error('Enter a valid lead passenger email address.');
     const win = BrowserWindow.fromWebContents(event.sender);
     const pdf = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 } });
     const transporter = nodemailer.createTransport({ host: settings.smtpHost, port: Number(settings.smtpPort || 587), secure: Boolean(settings.smtpSecure), auth: { user: settings.smtpUser, pass: settings.password } });
