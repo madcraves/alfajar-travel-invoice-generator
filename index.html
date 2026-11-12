@@ -221,5 +221,16 @@ function printNow(){updatePreview();window.invoiceAPI.print()}
 async function savePDF(){updatePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
 newInvoice();renderInvoices();loadEmailSettings();
+if (window.invoiceAPI.onUpdateStatus) {
+ window.invoiceAPI.onUpdateStatus(status => {
+  const el=document.getElementById('updateStatus');
+  if(!el)return;
+  if(status.state==='checking')el.textContent='Checking updates…';
+  else if(status.state==='latest')el.textContent='Up to date';
+  else if(status.state==='downloading')el.textContent='Downloading update'+(Number.isFinite(status.percent)?' '+status.percent+'%':'…');
+  else if(status.state==='installing')el.textContent='Installing update and restarting…';
+  else if(status.state==='error')el.textContent='Update failed — will retry later';
+ });
+}
 document.getElementById('leadEmail').addEventListener('input',()=>{document.getElementById('emailTo').value=val('leadEmail');});
 </script></body></html>
