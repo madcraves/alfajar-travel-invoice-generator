@@ -8,13 +8,23 @@ Offline Windows desktop invoice application built with Electron.
 - **Generated Invoices:** save invoices locally, reopen and edit them, print/export them, or delete them.
 - **Print and PDF export:** use the Windows print dialog or save a PDF.
 - **Local-only storage:** saved invoice records stay in the local application profile; they are not uploaded to a server.
-- **Automatic updates:** installed versions check GitHub Releases when the app opens and periodically while running. Users can choose **Download & Install** in the update popup; the app downloads the update and restarts to install it.
+- **Automatic updates:** installed versions check GitHub Releases when the app opens and periodically while running. Users can also click **Check for Updates** in the header. Available updates can be downloaded and installed with an automatic restart.
+- **Email invoices:** add a separate lead-passenger email address to each invoice and send the invoice PDF directly from the Email Invoice section.
+- **Configurable sender account:** configure Alfajar Travel's sender address and SMTP settings in the app. SMTP passwords are encrypted using the operating system's secure credential storage.
 
 ## Build the Windows installer using GitHub
 1. Open the repository's **Actions** tab.
 2. Run **Build Windows Installer** (or push a commit to the configured branch).
 3. Open the successful workflow run, scroll to **Artifacts**, and download `Alfajar-Travel-Windows-Installer`.
 4. Extract the artifact to get the Windows `.exe` installer.
+
+## Configure invoice email
+1. In **Alfajar Travel email account settings**, enter the sender email address, SMTP host, port, username and password/app password supplied by the email hosting provider.
+2. Select SSL/TLS when required by the provider (commonly port 465; port 587 commonly uses STARTTLS).
+3. Click **Save Email Settings**.
+4. Enter the lead passenger email in the invoice. The Email Invoice section is prefilled with that address; edit the subject/message if needed and click **Send Invoice Email**. The current invoice preview is attached as a PDF.
+
+The app does not guess SMTP server settings. Confirm the correct SMTP host, port, security mode and app-password requirements with the Alfajar email provider before sending.
 
 ## Publish an update release
 1. Increase the `version` in `package.json` (for example, from `1.0.1` to `1.0.2`).
