@@ -5,8 +5,8 @@ const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow = null;
-let updatePromptOpen = false;
 let updateDownloadStarted = false;
+let updateInstallStarted = false;
 let manualUpdateCheck = false;
 const emailSettingsPath = () => path.join(app.getPath('userData'), 'email-settings.json');
 function readEmailSettings() {
@@ -45,86 +45,69 @@ function createWindow() {
 }
 
 async function checkForApplicationUpdates() {
-    // Updates are available to installed builds only, not while running from source.
-    if (!app.isPackaged) return;
-
+    if (!app.isPackaged || updateDownloadStarted || updateInstallStarted) return;
     try {
         await autoUpdater.checkForUpdates();
     } catch (error) {
         console.error('Update check failed:', error);
+        if (manualUpdateCheck && mainWindow) {
+            manualUpdateCheck = false;
+            await dialog.showMessageBox(mainWindow, { type: 'error', title: 'Update Check Failed', message: 'Could not check for updates.', detail: error.message, buttons: ['OK'] });
+        }
     }
 }
 
 function configureAutoUpdates() {
     if (!app.isPackaged) return;
-
-    autoUpdater.autoDownload = false;
+    // Detect and download published updates automatically in the background.
+    autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.allowDowngrade = false;
 
+    autoUpdater.on('checking-for-update', () => {
+        if (mainWindow) mainWindow.webContents.send('update-status', { state: 'checking' });
+    });
     autoUpdater.on('update-not-available', async () => {
-        if (manualUpdateCheck) {
+        if (mainWindow) mainWindow.webContents.send('update-status', { state: 'latest' });
+        if (manualUpdateCheck && mainWindow) {
             manualUpdateCheck = false;
             await dialog.showMessageBox(mainWindow, { type: 'info', title: 'No Updates Available', message: 'You are using the latest version of Alfajar Travel Invoice Generator.', buttons: ['OK'] });
         }
     });
-
-    autoUpdater.on('update-available', async (info) => {
+    autoUpdater.on('update-available', (info) => {
         manualUpdateCheck = false;
-        if (updatePromptOpen || updateDownloadStarted) return;
-        updatePromptOpen = true;
-
-        const version = info.version || 'a newer version';
-        const result = await dialog.showMessageBox(mainWindow, {
-            type: 'info',
-            title: 'Software Update Available',
-            message: 'A new Alfajar Travel Invoice Generator update is available.',
-            detail: 'Version ' + version + ' is ready to download. Your saved invoices will remain on this computer.',
-            buttons: ['Download & Install', 'Later'],
-            defaultId: 0,
-            cancelId: 1,
-            noLink: true
-        });
-
-        updatePromptOpen = false;
-
-        if (result.response === 0) {
-            updateDownloadStarted = true;
-            try {
-                await autoUpdater.downloadUpdate();
-            } catch (error) {
-                updateDownloadStarted = false;
-                console.error('Update download failed:', error);
-                await dialog.showMessageBox(mainWindow, {
-                    type: 'error',
-                    title: 'Update Download Failed',
-                    message: 'The update could not be downloaded.',
-                    detail: 'Please check your internet connection and try again later. ' + error.message,
-                    buttons: ['OK']
-                });
-            }
+        updateDownloadStarted = true;
+        if (mainWindow) mainWindow.webContents.send('update-status', { state: 'downloading', version: info.version || '' });
+        if (Notification.isSupported()) new Notification({ title: 'Alfajar Travel update found', body: 'Version ' + (info.version || 'new version') + ' is downloading automatically.' }).show();
+    });
+    autoUpdater.on('download-progress', (progress) => {
+        if (mainWindow) {
+            mainWindow.setProgressBar(Math.max(0, Math.min(1, (progress.percent || 0) / 100)));
+            mainWindow.webContents.send('update-status', { state: 'downloading', percent: Math.round(progress.percent || 0) });
         }
     });
-
     autoUpdater.on('update-downloaded', (info) => {
-        const version = info.version || 'the latest version';
-
-        // The user already chose Download & Install in the update popup.
-        // Notify briefly, then install and restart automatically.
-        if (Notification.isSupported()) {
-            new Notification({
-                title: 'Alfajar Travel updated',
-                body: 'Version ' + version + ' is ready. The application is restarting now.'
-            }).show();
+        if (updateInstallStarted) return;
+        updateInstallStarted = true;
+        if (mainWindow) {
+            mainWindow.setProgressBar(-1);
+            mainWindow.webContents.send('update-status', { state: 'installing', version: info.version || '' });
         }
-
-        setTimeout(() => autoUpdater.quitAndInstall(true, true), 1500);
+        if (Notification.isSupported()) new Notification({ title: 'Installing Alfajar Travel update', body: 'The update is ready. The app will restart automatically.' }).show();
+        // Run the downloaded NSIS installer and relaunch the updated application.
+        setTimeout(() => autoUpdater.quitAndInstall(true, true), 1200);
     });
-
     autoUpdater.on('error', async (error) => {
+        updateDownloadStarted = false;
+        updateInstallStarted = false;
+        if (mainWindow) {
+            mainWindow.setProgressBar(-1);
+            mainWindow.webContents.send('update-status', { state: 'error' });
+        }
         console.error('Auto-update error:', error);
-        if (manualUpdateCheck) {
+        if (manualUpdateCheck && mainWindow) {
             manualUpdateCheck = false;
-            await dialog.showMessageBox(mainWindow, { type: 'error', title: 'Update Check Failed', message: 'Could not check for updates. Please try again later.', detail: error.message, buttons: ['OK'] });
+            await dialog.showMessageBox(mainWindow, { type: 'error', title: 'Update Failed', message: 'The update could not be downloaded.', detail: error.message, buttons: ['OK'] });
         }
     });
 }
@@ -154,6 +137,7 @@ app.on('window-all-closed', () => {
 
 ipcMain.handle('check-for-updates-manual', async () => {
     if (!app.isPackaged) return { message: 'Update checks are available in the installed application.' };
+    if (updateDownloadStarted || updateInstallStarted) return { message: 'An update is already downloading or installing automatically.' };
     manualUpdateCheck = true;
     try { await autoUpdater.checkForUpdates(); return { checking: true }; }
     catch (error) { manualUpdateCheck = false; throw new Error('Update check failed: ' + error.message); }
