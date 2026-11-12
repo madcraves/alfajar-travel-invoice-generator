@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Notification, safeStorage } = require('electron');
+const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -6,6 +7,22 @@ const { autoUpdater } = require('electron-updater');
 let mainWindow = null;
 let updatePromptOpen = false;
 let updateDownloadStarted = false;
+let manualUpdateCheck = false;
+const emailSettingsPath = () => path.join(app.getPath('userData'), 'email-settings.json');
+function readEmailSettings() {
+    try {
+        const saved = JSON.parse(fs.readFileSync(emailSettingsPath(), 'utf8'));
+        const password = saved.passwordEncrypted && safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(saved.passwordEncrypted, 'base64')) : '';
+        return { ...saved, password };
+    } catch (_) { return {}; }
+}
+function writeEmailSettings(settings) {
+    if (!safeStorage.isEncryptionAvailable()) throw new Error('Secure credential storage is not available on this computer.');
+    const passwordEncrypted = settings.password ? safeStorage.encryptString(settings.password).toString('base64') : '';
+    const stored = { fromEmail: String(settings.fromEmail || '').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(), smtpHost: String(settings.smtpHost || '').trim(), smtpPort: Number(settings.smtpPort || 587), smtpSecure: Boolean(settings.smtpSecure), smtpUser: String(settings.smtpUser || '').trim(), passwordEncrypted };
+    fs.writeFileSync(emailSettingsPath(), JSON.stringify(stored, null, 2), { mode: 0o600 });
+    return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted) };
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -44,7 +61,15 @@ function configureAutoUpdates() {
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
 
+    autoUpdater.on('update-not-available', async () => {
+        if (manualUpdateCheck) {
+            manualUpdateCheck = false;
+            await dialog.showMessageBox(mainWindow, { type: 'info', title: 'No Updates Available', message: 'You are using the latest version of Alfajar Travel Invoice Generator.', buttons: ['OK'] });
+        }
+    });
+
     autoUpdater.on('update-available', async (info) => {
+        manualUpdateCheck = false;
         if (updatePromptOpen || updateDownloadStarted) return;
         updatePromptOpen = true;
 
@@ -95,8 +120,12 @@ function configureAutoUpdates() {
         setTimeout(() => autoUpdater.quitAndInstall(true, true), 1500);
     });
 
-    autoUpdater.on('error', (error) => {
+    autoUpdater.on('error', async (error) => {
         console.error('Auto-update error:', error);
+        if (manualUpdateCheck) {
+            manualUpdateCheck = false;
+            await dialog.showMessageBox(mainWindow, { type: 'error', title: 'Update Check Failed', message: 'Could not check for updates. Please try again later.', detail: error.message, buttons: ['OK'] });
+        }
     });
 }
 
@@ -120,6 +149,44 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
     }
+});
+
+
+ipcMain.handle('check-for-updates-manual', async () => {
+    if (!app.isPackaged) return { message: 'Update checks are available in the installed application.' };
+    manualUpdateCheck = true;
+    try { await autoUpdater.checkForUpdates(); return { checking: true }; }
+    catch (error) { manualUpdateCheck = false; throw new Error('Update check failed: ' + error.message); }
+});
+
+ipcMain.handle('get-email-settings', async () => {
+    const s = readEmailSettings();
+    return { fromEmail: s.fromEmail || '', fromName: s.fromName || 'Alfajar Travel UK', smtpHost: s.smtpHost || '', smtpPort: s.smtpPort || 587, smtpSecure: Boolean(s.smtpSecure), smtpUser: s.smtpUser || '', hasPassword: Boolean(s.password) };
+});
+
+ipcMain.handle('save-email-settings', async (_event, settings) => {
+    if (!settings || !settings.fromEmail || !settings.smtpHost || !settings.smtpUser) throw new Error('Please enter the sender email, SMTP host and SMTP username.');
+    const current = readEmailSettings();
+    if (!settings.password && current.password) settings.password = current.password;
+    if (!settings.password) throw new Error('Please enter the SMTP password or app password.');
+    return writeEmailSettings(settings);
+});
+
+ipcMain.handle('send-invoice-email', async (event, payload) => {
+    const settings = readEmailSettings();
+    if (!settings.fromEmail || !settings.smtpHost || !settings.smtpUser || !settings.password) throw new Error('Please configure and save your Alfajar Travel email settings first.');
+    if (!payload || !/^\\S+@\\S+\\.\\S+$/.test(String(payload.to || ''))) throw new Error('Enter a valid lead passenger email address.');
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const pdf = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 } });
+    const transporter = nodemailer.createTransport({ host: settings.smtpHost, port: Number(settings.smtpPort || 587), secure: Boolean(settings.smtpSecure), auth: { user: settings.smtpUser, pass: settings.password } });
+    await transporter.sendMail({
+        from: { name: settings.fromName || 'Alfajar Travel UK', address: settings.fromEmail },
+        to: String(payload.to).trim(),
+        subject: String(payload.subject || 'Your Alfajar Travel invoice'),
+        text: String(payload.message || 'Please find your invoice attached. Thank you for booking with Alfajar Travel.'),
+        attachments: [{ filename: String(payload.invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-') + '.pdf', content: pdf, contentType: 'application/pdf' }]
+    });
+    return { sent: true };
 });
 
 // Save invoice as PDF
