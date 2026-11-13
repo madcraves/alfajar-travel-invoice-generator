@@ -98,6 +98,12 @@ textarea, select, [contenteditable="true"] {
  z-index: 1;
 }
 .field, .field label { pointer-events: auto; }
+
+.modal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(14,32,28,.52);display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-overlay[hidden]{display:none!important}
+.modal-card{width:min(100%,440px);background:#fff;border:1px solid var(--line);border-radius:15px;padding:24px;box-shadow:0 22px 70px rgba(0,0,0,.22)}
+.modal-card h2{margin:0 0 12px}.payment-summary{background:#f1f6f3;border-radius:8px;padding:11px;font-size:12px;color:var(--green)}
+.payment-error{min-height:18px;color:#b42318;font-size:12px;margin:6px 0}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -295,21 +301,48 @@ if(!all.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use
 if(!filtered.length){list.innerHTML='<div class="empty">No invoices match your search or payment filter.<br>Try another search term or select “All statuses”.</div>';return}
 list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+(x.dueDate?' · Due: '+esc(x.dueDate):'')+'</div></div><div class="row-actions"><button onclick="loadInvoice(decodeURIComponent(\''+key+'\'))">Open / Edit</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button onclick="prepareSavedInvoiceEmail(decodeURIComponent(\''+key+'\'))">Send Email</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
 }
+let pendingPaymentInvoice='';
 function recordPayment(inv){
-const all=invoices(),index=all.findIndex(x=>String(x.inv)===String(inv));if(index<0)return;
-const current=all[index],p=paymentInfo(current);
-if(p.balance<=0.009){alert('This invoice is already fully paid.');return}
-const raw=prompt('Enter the additional payment received (£).\nCurrent received: £'+p.received.toFixed(2)+'\nOutstanding balance: £'+p.balance.toFixed(2),'');
-if(raw===null)return;
-const amount=Number(String(raw).replace(/,/g,'').trim());
-if(!Number.isFinite(amount)||amount<=0){alert('Enter a valid payment amount greater than zero.');return}
-if(amount>p.balance+0.009){alert('Payment cannot be greater than the outstanding balance of £'+p.balance.toFixed(2)+'.');return}
-current.received=(p.received+amount).toFixed(2);
-current.balance=paymentInfo(current).balance.toFixed(2);
-current.paymentStatus=paymentInfo(current).status;
-current.updatedAt=new Date().toISOString();
-all[index]=current;setInvoices(all);
-alert('Payment of £'+amount.toFixed(2)+' recorded for invoice '+inv+'.');
+ const all=invoices(),index=all.findIndex(x=>String(x.inv)===String(inv));
+ if(index<0){alert('Invoice record could not be found. Please refresh the invoice list and try again.');return}
+ const current=all[index],p=paymentInfo(current);
+ if(p.balance<=0.009){alert('This invoice is already fully paid.');return}
+ pendingPaymentInvoice=String(inv);
+ document.getElementById('paymentModalInvoice').textContent='Invoice '+pendingPaymentInvoice;
+ document.getElementById('paymentModalSummary').textContent='Already received: £'+p.received.toFixed(2)+' · Outstanding: £'+p.balance.toFixed(2);
+ const amountInput=document.getElementById('paymentAmountInput');
+ amountInput.value='';
+ document.getElementById('paymentModalError').textContent='';
+ document.getElementById('paymentModal').hidden=false;
+ requestAnimationFrame(()=>{amountInput.focus();amountInput.select()});
+}
+function closePaymentModal(){
+ document.getElementById('paymentModal').hidden=true;
+ document.getElementById('paymentAmountInput').value='';
+ document.getElementById('paymentModalError').textContent='';
+ pendingPaymentInvoice='';
+}
+function submitRecordedPayment(){
+ const all=invoices(),index=all.findIndex(x=>String(x.inv)===pendingPaymentInvoice);
+ if(index<0){document.getElementById('paymentModalError').textContent='Invoice record not found. Refresh the invoice list and try again.';return}
+ const current=all[index],p=paymentInfo(current);
+ const raw=String(val('paymentAmountInput')).replace(/,/g,'').trim();
+ const amount=Number(raw);
+ if(!raw||!Number.isFinite(amount)||amount<=0){document.getElementById('paymentModalError').textContent='Enter a valid payment amount greater than zero.';document.getElementById('paymentAmountInput').focus();return}
+ if(amount>p.balance+0.009){document.getElementById('paymentModalError').textContent='Payment cannot exceed the outstanding balance of £'+p.balance.toFixed(2)+'.';document.getElementById('paymentAmountInput').focus();return}
+ current.received=(p.received+amount).toFixed(2);
+ const updated=paymentInfo(current);
+ current.balance=updated.balance.toFixed(2);
+ current.paymentStatus=updated.status;
+ current.updatedAt=new Date().toISOString();
+ all[index]=current;
+ try{
+  setInvoices(all);
+  closePaymentModal();
+  alert('Payment of £'+amount.toFixed(2)+' recorded for invoice '+current.inv+'.');
+ }catch(error){
+  document.getElementById('paymentModalError').textContent='Could not save payment: '+error.message;
+ }
 }
 function applyInvoiceToForm(d){
  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=d[id]??''});
@@ -462,4 +495,15 @@ if (window.invoiceAPI.onUpdateStatus) {
  });
 }
 document.getElementById('leadEmail').addEventListener('input',()=>{document.getElementById('emailTo').value=val('leadEmail');});
+
+<div id="paymentModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+ <div class="modal-card">
+  <h2 id="paymentModalTitle">Record payment</h2>
+  <p id="paymentModalInvoice" class="hint"></p>
+  <p id="paymentModalSummary" class="payment-summary"></p>
+  <div class="field"><label for="paymentAmountInput">Additional payment received (£)</label><input id="paymentAmountInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Enter amount"></div>
+  <p id="paymentModalError" class="payment-error" role="alert"></p>
+  <div class="actions"><button type="button" onclick="submitRecordedPayment()">Save payment</button><button type="button" class="ghost" onclick="closePaymentModal()">Cancel</button></div>
+ </div>
+</div>
 </script></body></html>
