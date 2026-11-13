@@ -247,6 +247,16 @@ Alfajar Travel UK</textarea></div>
 </div>
 </section>
 </main>
+<div id="paymentModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+ <div class="modal-card">
+  <h2 id="paymentModalTitle">Record payment</h2>
+  <p id="paymentModalInvoice" class="hint"></p>
+  <p id="paymentModalSummary" class="payment-summary"></p>
+  <div class="field"><label for="paymentAmountInput">Additional payment received (£)</label><input id="paymentAmountInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Enter amount"></div>
+  <p id="paymentModalError" class="payment-error" role="alert"></p>
+  <div class="actions"><button type="button" onclick="submitRecordedPayment()">Save payment</button><button type="button" class="ghost" onclick="closePaymentModal()">Cancel</button></div>
+ </div>
+</div>
 <script>
 const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','flights','hotels','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bank'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
@@ -496,14 +506,5 @@ if (window.invoiceAPI.onUpdateStatus) {
 }
 document.getElementById('leadEmail').addEventListener('input',()=>{document.getElementById('emailTo').value=val('leadEmail');});
 
-<div id="paymentModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
- <div class="modal-card">
-  <h2 id="paymentModalTitle">Record payment</h2>
-  <p id="paymentModalInvoice" class="hint"></p>
-  <p id="paymentModalSummary" class="payment-summary"></p>
-  <div class="field"><label for="paymentAmountInput">Additional payment received (£)</label><input id="paymentAmountInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Enter amount"></div>
-  <p id="paymentModalError" class="payment-error" role="alert"></p>
-  <div class="actions"><button type="button" onclick="submitRecordedPayment()">Save payment</button><button type="button" class="ghost" onclick="closePaymentModal()">Cancel</button></div>
- </div>
-</div>
+
 </script></body></html>
