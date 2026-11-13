@@ -240,6 +240,7 @@ textarea, select, [contenteditable="true"] {
 #invoiceEditFields .accommodation-card input[type=checkbox]{width:16px;height:16px;min-height:16px;padding:0;accent-color:#1d6258;cursor:pointer}
 #invoiceEditFields .accommodation-card .meal-options{display:flex;flex-wrap:wrap;gap:18px;padding:12px 14px;background:#f0f6f2;border-radius:8px}
 #invoiceEditFields .accommodation-card .meal-options[hidden]{display:none!important}
+.invoice-disclaimer{margin-top:18px;padding:14px 15px;border:1px solid #e6d7aa;border-left:4px solid var(--gold);border-radius:7px;background:#fbfaf5}.invoice-disclaimer-heading{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--green);margin-bottom:8px;text-transform:uppercase}.invoice-disclaimer .content{font-size:10px;line-height:1.55}.bank-details-section .generator-fields{gap:0 13px}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -415,7 +416,16 @@ Alfajar Travel UK</textarea></div>
           <div class="field"><label for="bizphone">Business phone</label><input id="bizphone" type="tel" value="+44 7465 796629"></div>
           <div class="field"><label for="bizemail">Business email</label><input id="bizemail" type="email" value="book@alfajartravel.co.uk"></div>
           <div class="field"><label for="atol">ATOL / registration details</label><input id="atol" placeholder="Enter verified details only"></div>
-          <div class="field"><label for="bank">Bank details / payment instructions</label><textarea id="bank" rows="3" placeholder="Enter approved payment instructions"></textarea></div>
+        </div>
+      </section>
+      <section class="generator-section bank-details-section">
+        <div class="generator-section-heading"><span class="section-number">07</span><div><h3>Bank details</h3><p>Payment account information shown on the invoice</p></div></div>
+        <div class="generator-fields two-col">
+          <div class="field"><label for="bankName">Bank name</label><input id="bankName" placeholder="Enter bank name"></div>
+          <div class="field"><label for="accountName">Account name</label><input id="accountName" placeholder="Enter account holder name"></div>
+          <div class="field"><label for="accountNumber">Account number</label><input id="accountNumber" inputmode="numeric" placeholder="Enter account number"></div>
+          <div class="field"><label for="sortCode">Sort code</label><input id="sortCode" placeholder="00-00-00"></div>
+          <div class="field full-width"><label for="disclaimer">Invoice disclaimer</label><textarea id="disclaimer" rows="7"></textarea><small class="field-help">This help and payment-security disclaimer appears at the end of each invoice, immediately before the signature fields.</small></div>
         </div>
       </section>
       <div class="generator-side-note"><span class="note-icon">i</span><div><strong>Before saving</strong><p>Review passenger details, payment amounts and company information. Customer records are stored locally on this computer.</p></div></div>
@@ -443,8 +453,10 @@ Alfajar Travel UK</textarea></div>
 <div class="cell"><b>Total payable</b><span id="p_total"></span></div><div class="cell"><b>Amount received</b><span id="p_received"></span></div><div class="cell"><b>Other credit</b><span id="p_credit"></span></div><div class="cell"><b>Balance</b><span id="p_balance"></span></div></div><div class="small" style="margin-top:7px">Payment status: <strong id="p_paymentStatus"></strong></div>
 <h3>Special note</h3><div class="note content" id="p_note"></div>
 <h3>Terms &amp; Conditions</h3><div class="terms" id="p_terms"></div>
+<h3>Bank details</h3><div class="content" id="p_bankDetails"></div>
+<div class="invoice-disclaimer"><div class="invoice-disclaimer-heading">Need Help? · Disclaimer</div><div class="content" id="p_disclaimer"></div></div>
 <div class="sig">Customer signature: ____________________________________ &nbsp;&nbsp; Date: __________________</div>
-<div class="small" style="margin-top:14px">Alfajar Travel UK · <span id="p_footercontact"></span><br><span id="p_bank"></span></div>
+<div class="small" style="margin-top:14px">Alfajar Travel UK · <span id="p_footercontact"></span></div>
 </section></div></div>
 <section id="saved" class="tab">
 <div class="saved-panel">
@@ -476,7 +488,7 @@ Alfajar Travel UK</textarea></div>
  </div>
 </div>
 <script>
-const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bank'];
+const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
 3. Airline schedules, baggage allowances, hotel facilities and check-in/check-out times are controlled by the relevant suppliers and may change.
@@ -512,7 +524,8 @@ document.getElementById('p_hotels').textContent=accommodationSummary('makkah');d
 document.getElementById('bizline').textContent=[val('bizphone'),val('bizemail')].filter(Boolean).join(' · ');
 document.getElementById('p_address').textContent=val('address');
 document.getElementById('p_atol').textContent=val('atol');
-document.getElementById('p_bank').textContent=val('bank')?'Payment details: '+val('bank'):'';
+document.getElementById('p_bankDetails').textContent=[['Bank Name',val('bankName')],['Account Name',val('accountName')],['Account Number',val('accountNumber')],['Sort Code',val('sortCode')]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join('\\n');
+document.getElementById('p_disclaimer').textContent=val('disclaimer');
 document.getElementById('p_footercontact').textContent=[val('bizphone'),val('bizemail'), 'alfajartravel.co.uk'].filter(Boolean).join(' · ');
 }
 function invoices(){try{return JSON.parse(localStorage.getItem('alfajarInvoices')||'[]')}catch(e){return []}}
@@ -647,7 +660,7 @@ function printSaved(inv){loadInvoice(inv);printNow()}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)setFieldValue(el,'')});
-['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
+['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('disclaimer').value="Need Help?\\nContact our team during working hours (Mon-Fri: 09:00-18:00) or email us at book@alfajartravel.co.uk\\n\\nDISCLAIMER\\nWe only accept fund transfers to the designated bank account details listed below. If you are requested to transfer funds to any other account, please do not proceed, as we cannot be held liable for any loss or inconvenience. In such circumstances, we advise you to promptly contact us at +44 7465 796629 or via email at book@alfajartravel.co.uk.";document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function setMailHealthItem(stateId, detailId, item){
