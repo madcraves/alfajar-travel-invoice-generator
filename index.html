@@ -88,7 +88,7 @@ button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
-<nav class="no-print"><button id="tabEmail" onclick="showTab('email')">1. Email</button><button id="tabGenerator" class="active" onclick="showTab('generator')">2. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">3. Generated Invoices <span id="savedCount"></span></button><button id="tabSettings" onclick="showTab('settings')">4. Email Settings</button></nav>
+<nav class="no-print"><button id="tabEmail" onclick="showTab('email')">1. Email</button><button id="tabGenerator" onclick="showTab('generator')">2. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">3. Generated Invoices <span id="savedCount"></span></button><button id="tabSettings" onclick="showTab('settings')">4. Email Settings</button></nav>
 <main>
 <section id="email" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
@@ -127,7 +127,7 @@ Alfajar Travel UK</textarea></div>
 <p class="hint">Your SMTP password is encrypted using the computer's secure credential storage. SMTP host, port and security settings depend on your email provider. Use an app password if required.</p>
 </div>
 </section>
-<section id="generator" class="tab active">
+<section id="generator" class="tab">
 <div class="workspace">
 <section class="panel form-panel no-print">
 <h2>Invoice Generator</h2>
