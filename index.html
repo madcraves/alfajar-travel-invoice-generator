@@ -134,19 +134,19 @@ Alfajar Travel UK</textarea></div>
 <section id="settings" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
 <h2>Email Settings</h2>
-<p class="hint">Configure the Alfajar Travel sender account used when sending invoices. These settings are stored locally and the SMTP password is encrypted with this computer's secure credential storage.</p>
+<p class="hint">The same Hostinger mailbox (invoice@alfajartravel.co.uk) is used to send invoices and receive signed invoices. These settings are stored locally and the SMTP password is encrypted with this computer's secure credential storage.</p>
 <h3>SMTP sender account</h3>
 <div class="grid">
-<div class="field"><label>Alfajar Travel sender email</label><input id="emailFrom" type="email" placeholder="book@alfajartravel.co.uk"></div>
+<div class="field"><label>Alfajar Travel sender email</label><input id="emailFrom" type="email" value="invoice@alfajartravel.co.uk"></div>
 <div class="field"><label>Sender display name</label><input id="emailFromName" value="Alfajar Travel UK"></div>
-<div class="field"><label>SMTP server / host</label><input id="smtpHost" placeholder="e.g. mail.your-email-host.com"></div>
-<div class="field"><label>SMTP port</label><input id="smtpPort" type="number" value="587"></div>
-<div class="field"><label>SMTP username</label><input id="smtpUser" autocomplete="username" placeholder="Email account username"></div>
+<div class="field"><label>SMTP server / host</label><input id="smtpHost" value="smtp.hostinger.com"></div>
+<div class="field"><label>SMTP port</label><input id="smtpPort" type="number" value="465"></div>
+<div class="field"><label>SMTP username</label><input id="smtpUser" autocomplete="username" value="invoice@alfajartravel.co.uk"></div>
 <div class="field"><label>SMTP password / app password</label><input id="smtpPass" type="password" autocomplete="new-password" placeholder="Enter password or app password"></div>
 </div>
-<div class="field"><label><input id="smtpSecure" type="checkbox" style="width:auto;margin-right:7px">Use SSL/TLS (commonly port 465)</label></div>
+<div class="field"><label><input id="smtpSecure" type="checkbox" checked style="width:auto;margin-right:7px">Use SSL/TLS (commonly port 465)</label></div>
 <div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button></div>
-<p class="hint">Your SMTP password is encrypted using the computer's secure credential storage. SMTP host, port and security settings depend on your email provider. Use an app password if required.</p>
+<p class="hint">Your SMTP password is encrypted using the computer's secure credential storage. Hostinger SMTP is preconfigured: smtp.hostinger.com, port 465, SSL/TLS. The mailbox password entered below is used for both sending and receiving.</p>
 <h3>Incoming mailbox — Hostinger IMAP</h3>
 <p class="hint">The Inbox connects to this mailbox to receive signed invoices and PDF attachments. Use the mailbox password for invoice@alfajartravel.co.uk; it is encrypted separately on this computer.</p>
 <div class="grid">
@@ -361,12 +361,12 @@ function checkForUpdates(){
 async function loadEmailSettings(){
  try{
   const s=await window.invoiceAPI.getEmailSettings();
-  document.getElementById('emailFrom').value=s.fromEmail||'book@alfajartravel.co.uk';
+  document.getElementById('emailFrom').value=s.fromEmail||s.imapEmail||'invoice@alfajartravel.co.uk';
   document.getElementById('emailFromName').value=s.fromName||'Alfajar Travel UK';
-  document.getElementById('smtpHost').value=s.smtpHost||'';
-  document.getElementById('smtpPort').value=s.smtpPort||587;
-  document.getElementById('smtpSecure').checked=Boolean(s.smtpSecure);
-  document.getElementById('smtpUser').value=s.smtpUser||'';
+  document.getElementById('smtpHost').value=s.smtpHost||'smtp.hostinger.com';
+  document.getElementById('smtpPort').value=s.smtpPort||465;
+  document.getElementById('smtpSecure').checked=s.smtpSecure!==false;
+  document.getElementById('smtpUser').value=s.smtpUser||s.fromEmail||s.imapEmail||'invoice@alfajartravel.co.uk';
   document.getElementById('smtpPass').placeholder=s.hasPassword?'Saved securely — enter a new password to replace':'Enter password or app password';
   document.getElementById('imapEmail').value=s.imapEmail||'invoice@alfajartravel.co.uk';
   document.getElementById('imapUser').value=s.imapUser||s.imapEmail||'invoice@alfajartravel.co.uk';
@@ -378,7 +378,7 @@ async function loadEmailSettings(){
 }
 async function saveEmailSettings(){
  try{
-  const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('smtpPass'),imapEmail:val('imapEmail'),imapUser:val('imapUser'),imapHost:val('imapHost'),imapPort:Number(val('imapPort')||993),imapSecure:document.getElementById('imapSecure').checked,imapPassword:val('imapPass')};
+  const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('smtpPass')||val('imapPass'),imapEmail:val('imapEmail'),imapUser:val('imapUser'),imapHost:val('imapHost'),imapPort:Number(val('imapPort')||993),imapSecure:document.getElementById('imapSecure').checked,imapPassword:val('imapPass')};
   await window.invoiceAPI.saveEmailSettings(settings);
   document.getElementById('smtpPass').value='';
   document.getElementById('imapPass').value='';
