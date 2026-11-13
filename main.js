@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Notification, safeStorage } = require('electron');
 const nodemailer = require('nodemailer');
+const { ImapFlow } = require('imapflow');
+const { simpleParser } = require('mailparser');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -8,20 +10,27 @@ let mainWindow = null;
 let updateDownloadStarted = false;
 let updateInstallStarted = false;
 let manualUpdateCheck = false;
+const inboxAttachmentCache = new Map();
 const emailSettingsPath = () => path.join(app.getPath('userData'), 'email-settings.json');
 function readEmailSettings() {
     try {
         const saved = JSON.parse(fs.readFileSync(emailSettingsPath(), 'utf8'));
-        const password = saved.passwordEncrypted && safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(saved.passwordEncrypted, 'base64')) : '';
-        return { ...saved, password };
+        const decrypt = (value) => value && safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(value, 'base64')) : '';
+        return { ...saved, password: decrypt(saved.passwordEncrypted), imapPassword: decrypt(saved.imapPasswordEncrypted) };
     } catch (_) { return {}; }
 }
 function writeEmailSettings(settings) {
     if (!safeStorage.isEncryptionAvailable()) throw new Error('Secure credential storage is not available on this computer.');
     const passwordEncrypted = settings.password ? safeStorage.encryptString(settings.password).toString('base64') : '';
-    const stored = { fromEmail: String(settings.fromEmail || '').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(), smtpHost: String(settings.smtpHost || '').trim(), smtpPort: Number(settings.smtpPort || 587), smtpSecure: Boolean(settings.smtpSecure), smtpUser: String(settings.smtpUser || '').trim(), passwordEncrypted };
+    const imapPasswordEncrypted = settings.imapPassword ? safeStorage.encryptString(settings.imapPassword).toString('base64') : '';
+    const stored = {
+        fromEmail: String(settings.fromEmail || '').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(),
+        smtpHost: String(settings.smtpHost || '').trim(), smtpPort: Number(settings.smtpPort || 587), smtpSecure: Boolean(settings.smtpSecure), smtpUser: String(settings.smtpUser || '').trim(), passwordEncrypted,
+        imapEmail: String(settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapHost: String(settings.imapHost || 'imap.hostinger.com').trim(),
+        imapPort: Number(settings.imapPort || 993), imapSecure: settings.imapSecure !== false, imapUser: String(settings.imapUser || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapPasswordEncrypted
+    };
     fs.writeFileSync(emailSettingsPath(), JSON.stringify(stored, null, 2), { mode: 0o600 });
-    return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted) };
+    return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted), inboxConfigured: Boolean(stored.imapEmail && stored.imapHost && stored.imapUser && imapPasswordEncrypted) };
 }
 
 function createWindow() {
@@ -145,7 +154,10 @@ ipcMain.handle('check-for-updates-manual', async () => {
 
 ipcMain.handle('get-email-settings', async () => {
     const s = readEmailSettings();
-    return { fromEmail: s.fromEmail || '', fromName: s.fromName || 'Alfajar Travel UK', smtpHost: s.smtpHost || '', smtpPort: s.smtpPort || 587, smtpSecure: Boolean(s.smtpSecure), smtpUser: s.smtpUser || '', hasPassword: Boolean(s.password) };
+    return {
+        fromEmail: s.fromEmail || '', fromName: s.fromName || 'Alfajar Travel UK', smtpHost: s.smtpHost || '', smtpPort: s.smtpPort || 587, smtpSecure: Boolean(s.smtpSecure), smtpUser: s.smtpUser || '', hasPassword: Boolean(s.password),
+        imapEmail: s.imapEmail || 'invoice@alfajartravel.co.uk', imapHost: s.imapHost || 'imap.hostinger.com', imapPort: s.imapPort || 993, imapSecure: s.imapSecure !== false, imapUser: s.imapUser || s.imapEmail || 'invoice@alfajartravel.co.uk', hasImapPassword: Boolean(s.imapPassword)
+    };
 });
 
 ipcMain.handle('save-email-settings', async (_event, settings) => {
@@ -153,7 +165,60 @@ ipcMain.handle('save-email-settings', async (_event, settings) => {
     const current = readEmailSettings();
     if (!settings.password && current.password) settings.password = current.password;
     if (!settings.password) throw new Error('Please enter the SMTP password or app password.');
+    if (!settings.imapPassword && current.imapPassword) settings.imapPassword = current.imapPassword;
     return writeEmailSettings(settings);
+});
+
+ipcMain.handle('get-inbox-emails', async () => {
+    const settings = readEmailSettings();
+    if (!settings.imapEmail || !settings.imapHost || !settings.imapUser || !settings.imapPassword) throw new Error('Open Email Settings and enter the invoice@alfajartravel.co.uk mailbox password first.');
+    const client = new ImapFlow({
+        host: settings.imapHost, port: Number(settings.imapPort || 993), secure: settings.imapSecure !== false,
+        auth: { user: settings.imapUser, pass: settings.imapPassword }, logger: false
+    });
+    const messages = [];
+    try {
+        await client.connect();
+        const lock = await client.getMailboxLock('INBOX');
+        try {
+            const uids = await client.search({ all: true }, { uid: true });
+            const recent = (uids || []).slice(-50).reverse();
+            for (const uid of recent) {
+                for await (const msg of client.fetch(String(uid), { uid: true, envelope: true, flags: true, internalDate: true, source: true }, { uid: true })) {
+                    const parsed = await simpleParser(msg.source);
+                    const from = parsed.from?.value?.[0] || {};
+                    const attachments = (parsed.attachments || []).map((a, index) => {
+                        const id = String(msg.uid) + ':' + index;
+                        inboxAttachmentCache.set(id, { content: a.content, filename: a.filename || ('attachment-' + (index + 1)), contentType: a.contentType || 'application/octet-stream' });
+                        return { id, filename: a.filename || ('attachment-' + (index + 1)), contentType: a.contentType || '', size: a.size || 0 };
+                    });
+                    const body = String(parsed.text || parsed.html || '').replace(/<[^>]*>/g, ' ').slice(0, 12000);
+                    const subject = String(parsed.subject || msg.envelope?.subject || '(No subject)');
+                    const signedCandidate = /signed|signature|signed invoice/i.test(subject + ' ' + body) || attachments.some(a => /\.pdf$/i.test(a.filename));
+                    messages.push({
+                        uid: msg.uid, from: from.name ? from.name + ' <' + (from.address || '') + '>' : (from.address || 'Unknown sender'),
+                        subject, date: (parsed.date || msg.internalDate || new Date()).toISOString(),
+                        text: body, unread: !Array.from(msg.flags || []).includes('\\Seen'),
+                        signedCandidate, attachments
+                    });
+                }
+            }
+        } finally { lock.release(); }
+    } finally {
+        try { await client.logout(); } catch (_) {}
+    }
+    return messages;
+});
+
+ipcMain.handle('save-inbox-attachment', async (event, attachmentId) => {
+    const attachment = inboxAttachmentCache.get(String(attachmentId || ''));
+    if (!attachment) throw new Error('This attachment is no longer available. Refresh the Inbox and try again.');
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const safeName = String(attachment.filename || 'email-attachment').replace(/[\\/:*?"<>|]/g, '_');
+    const result = await dialog.showSaveDialog(win, { title: 'Save email attachment', defaultPath: safeName, filters: [{ name: 'All files', extensions: ['*'] }] });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    fs.writeFileSync(result.filePath, attachment.content);
+    return { canceled: false, filePath: result.filePath };
 });
 
 ipcMain.handle('send-invoice-email', async (event, payload) => {
