@@ -142,6 +142,19 @@ textarea, select, [contenteditable="true"] {
  @page{size:A4;margin:12mm}
 }
 
+/* Saved invoice edit popup */
+.invoice-edit-overlay{z-index:10001;align-items:flex-start;overflow:auto;padding:20px}
+.invoice-edit-dialog{width:min(100%,1120px);margin:auto;background:#f4f7f5;border-radius:16px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.28)}
+.invoice-edit-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:2px 2px 16px}
+.invoice-edit-header h2{margin:0 0 5px;font-size:21px;font-weight:650}
+.invoice-edit-header p{margin:0}
+#invoiceEditFields .generator-layout{grid-template-columns:minmax(0,1fr) 300px}
+#invoiceEditFields .generator-section{box-shadow:0 3px 12px rgba(18,63,58,.035)}
+.invoice-edit-footer{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:16px;padding:15px 18px;background:#fff;border:1px solid #e0e9e5;border-radius:12px}
+.invoice-edit-footer .actions{margin:0}
+@media(max-width:850px){#invoiceEditFields .generator-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.invoice-edit-overlay{padding:7px}.invoice-edit-dialog{padding:12px}.invoice-edit-header,.invoice-edit-footer{align-items:flex-start;flex-direction:column}.invoice-edit-footer{width:100%}.invoice-edit-footer .actions{width:100%}}
+
 /* Invoice Generator — structured, responsive form screen */
 #generator .generator-screen{max-width:1240px;margin:0 auto}
 #generator .generator-page-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:2px 0 20px;padding:4px 2px}
@@ -376,6 +389,13 @@ Alfajar Travel UK</textarea></div>
 </div>
 </section>
 </main>
+<div id="invoiceEditModal" class="modal-overlay invoice-edit-overlay" hidden onclick="if(event.target===this)closeInvoiceEdit()">
+ <div class="invoice-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="invoiceEditTitle">
+  <div class="invoice-edit-header"><div><h2 id="invoiceEditTitle">Edit invoice</h2><p class="hint" id="invoiceEditSubtitle">Update the invoice details below, then save your changes.</p></div><button class="ghost" type="button" onclick="closeInvoiceEdit()">Close</button></div>
+  <div id="invoiceEditFields"></div>
+  <div class="invoice-edit-footer"><span class="hint">Changes are saved to this computer's invoice records.</span><div class="actions"><button class="ghost" type="button" onclick="closeInvoiceEdit()">Cancel</button><button type="button" onclick="saveInvoiceChanges()">Save changes</button></div></div>
+ </div>
+</div>
 <div id="paymentModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
  <div class="modal-card">
   <h2 id="paymentModalTitle">Record payment</h2>
@@ -438,7 +458,7 @@ const summary=document.getElementById('invoiceResultsSummary');
 if(summary)summary.textContent='Showing '+filtered.length+' of '+all.length+' invoice'+(all.length===1?'':'s');
 if(!all.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use Invoice Generator to create and save your first invoice.</div>';return}
 if(!filtered.length){list.innerHTML='<div class="empty">No invoices match your search or payment filter.<br>Try another search term or select “All statuses”.</div>';return}
-list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+(x.dueDate?' · Due: '+esc(x.dueDate):'')+'</div></div><div class="row-actions"><button onclick="loadInvoice(decodeURIComponent(\''+key+'\'))">Open / Edit</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button onclick="prepareSavedInvoiceEmail(decodeURIComponent(\''+key+'\'))">Send Email</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
+list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+(x.dueDate?' · Due: '+esc(x.dueDate):'')+'</div></div><div class="row-actions"><button onclick="editInvoice(decodeURIComponent(\''+key+'\'))">Edit invoice</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button onclick="prepareSavedInvoiceEmail(decodeURIComponent(\''+key+'\'))">Send Email</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
 }
 let pendingPaymentInvoice='';
 function recordPayment(inv){
@@ -482,6 +502,51 @@ function submitRecordedPayment(){
  }catch(error){
   document.getElementById('paymentModalError').textContent='Could not save payment: '+error.message;
  }
+}
+let pendingEditInvoice='';
+function editInvoice(inv){
+ const d=invoices().find(x=>String(x.inv)===String(inv));
+ if(!d){alert('Invoice record could not be found. Please refresh the invoice list and try again.');return}
+ pendingEditInvoice=String(inv);
+ const source=document.querySelector('#generator .generator-layout');
+ const host=document.getElementById('invoiceEditFields');
+ if(!source||!host){alert('Invoice editor could not be opened. Please restart the application.');return}
+ const clone=source.cloneNode(true);
+ clone.querySelectorAll('[id]').forEach(el=>{el.id='edit_'+el.id});
+ clone.querySelectorAll('[for]').forEach(el=>{el.htmlFor='edit_'+el.htmlFor});
+ host.replaceChildren(clone);
+ ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)field.value=d[id]??''});
+ const balance=paymentInfo(d).balance;
+ const balanceField=document.getElementById('edit_balance');if(balanceField)balanceField.value=balance.toFixed(2);
+ document.getElementById('invoiceEditTitle').textContent='Edit invoice '+String(d.inv||'');
+ document.getElementById('invoiceEditSubtitle').textContent='Update the details in the same invoice sections. Your existing invoice will only change when you select Save changes.';
+ document.getElementById('invoiceEditModal').hidden=false;
+ document.body.style.overflow='hidden';
+}
+function closeInvoiceEdit(){
+ document.getElementById('invoiceEditModal').hidden=true;
+ document.getElementById('invoiceEditFields').replaceChildren();
+ document.body.style.overflow='';
+ pendingEditInvoice='';
+}
+function saveInvoiceChanges(){
+ const all=invoices(),index=all.findIndex(x=>String(x.inv)===pendingEditInvoice);
+ if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');closeInvoiceEdit();return}
+ const original=all[index],data={...original};
+ ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=String(field.value??'').trim()});
+ if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
+ const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
+ if(duplicate>=0){alert('Another invoice already uses invoice number '+data.inv+'. Please enter a unique invoice number.');document.getElementById('edit_inv')?.focus();return}
+ const p=paymentInfo(data);
+ data.balance=p.balance.toFixed(2);
+ data.paymentStatus=p.status;
+ data.updatedAt=new Date().toISOString();
+ all[index]=data;
+ try{
+  setInvoices(all);
+  closeInvoiceEdit();
+  alert('Changes saved successfully for invoice '+data.inv+'.');
+ }catch(error){alert('Could not save invoice changes: '+error.message)}
 }
 function applyInvoiceToForm(d){
  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=d[id]??''});
