@@ -85,7 +85,20 @@ button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
 @media(max-width:600px){header.top{align-items:flex-start;gap:10px}header img{width:54px;height:50px}header h1{font-size:18px}.header-actions{flex-direction:column;align-items:flex-end}nav{gap:5px}nav button{padding:10px 11px;font-size:11px}main{padding:12px}.panel,.saved-panel{padding:16px}.paper{padding:20px 16px}.paperHead{gap:8px}.paperHead h2{font-size:15px}}
 @media print{body{background:#fff}.paper{border:0;box-shadow:none;border-radius:0;padding:0}.paperHead{border-bottom:2px solid #c5a34a}.cell{break-inside:avoid}.money{grid-template-columns:repeat(4,1fr)}}
 
-.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.dashboard-panel{background:#fff;border:1px solid #dfe9e4;border-radius:13px;padding:18px}.metric-value{font-size:24px;font-weight:800;color:var(--green)}.dashboard-columns{display:grid;grid-template-columns:1.4fr .8fr;gap:14px}.filter-bar{display:grid;grid-template-columns:1fr 190px;gap:10px;margin:14px 0}.status-pill{border-radius:99px;padding:5px 9px;font-size:10px;font-weight:800;background:#edf3f1}.status-pill.paid{background:#e4f4eb;color:#17633f}.status-pill.partial{background:#fff3d9;color:#8b5a0a}.status-pill.unpaid{background:#fff0ed;color:#a33f32}.status-pill.overdue{background:#fbe4e4;color:#a11f2b}@media(max-width:800px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}.dashboard-columns{grid-template-columns:1fr}}@media(max-width:600px){.filter-bar{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:1fr 1fr}.metric{padding:14px}.metric-value{font-size:20px}}</style></head>
+.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.dashboard-panel{background:#fff;border:1px solid #dfe9e4;border-radius:13px;padding:18px}.metric-value{font-size:24px;font-weight:800;color:var(--green)}.dashboard-columns{display:grid;grid-template-columns:1.4fr .8fr;gap:14px}.filter-bar{display:grid;grid-template-columns:1fr 190px;gap:10px;margin:14px 0}.status-pill{border-radius:99px;padding:5px 9px;font-size:10px;font-weight:800;background:#edf3f1}.status-pill.paid{background:#e4f4eb;color:#17633f}.status-pill.partial{background:#fff3d9;color:#8b5a0a}.status-pill.unpaid{background:#fff0ed;color:#a33f32}.status-pill.overdue{background:#fbe4e4;color:#a11f2b}@media(max-width:800px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}.dashboard-columns{grid-template-columns:1fr}}@media(max-width:600px){.filter-bar{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:1fr 1fr}.metric{padding:14px}.metric-value{font-size:20px}}
+/* Explicitly keep invoice form fields focusable, selectable and editable. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea, select, [contenteditable="true"] {
+ pointer-events: auto !important;
+ user-select: text !important;
+ -webkit-user-select: text !important;
+ cursor: text !important;
+ caret-color: var(--green) !important;
+ position: relative;
+ z-index: 1;
+}
+.field, .field label { pointer-events: auto; }
+</style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
 <nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">5. Email Settings</button></nav>
@@ -135,29 +148,29 @@ Alfajar Travel UK</textarea></div>
 <div class="panel" style="max-width:900px;margin:0 auto">
 <h2>Email Settings</h2>
 <p class="hint">The same Hostinger mailbox (invoice@alfajartravel.co.uk) is used to send invoices and receive signed invoices. These settings are stored locally and the SMTP password is encrypted with this computer's secure credential storage.</p>
-<h3>SMTP sender account</h3>
+<h3>Hostinger mailbox — Send & Receive</h3>
 <div class="grid">
 <div class="field"><label>Alfajar Travel sender email</label><input id="emailFrom" type="email" value="invoice@alfajartravel.co.uk"></div>
 <div class="field"><label>Sender display name</label><input id="emailFromName" value="Alfajar Travel UK"></div>
 <div class="field"><label>SMTP server / host</label><input id="smtpHost" value="smtp.hostinger.com"></div>
 <div class="field"><label>SMTP port</label><input id="smtpPort" type="number" value="465"></div>
 <div class="field"><label>SMTP username</label><input id="smtpUser" autocomplete="username" value="invoice@alfajartravel.co.uk"></div>
-<div class="field"><label>SMTP password / app password</label><input id="smtpPass" type="password" autocomplete="new-password" placeholder="Enter password or app password"></div>
+
 </div>
 <div class="field"><label><input id="smtpSecure" type="checkbox" checked style="width:auto;margin-right:7px">Use SSL/TLS (commonly port 465)</label></div>
 <div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button></div>
 <p class="hint">Your SMTP password is encrypted using the computer's secure credential storage. Hostinger SMTP is preconfigured: smtp.hostinger.com, port 465, SSL/TLS. The mailbox password entered below is used for both sending and receiving.</p>
-<h3>Incoming mailbox — Hostinger IMAP</h3>
-<p class="hint">The Inbox connects to this mailbox to receive signed invoices and PDF attachments. Use the mailbox password for invoice@alfajartravel.co.uk; it is encrypted separately on this computer.</p>
+<h3>Incoming inbox settings</h3>
+<p class="hint">The same Hostinger mailbox sends invoices and receives signed invoices. Enter its password once below; it is securely stored and used for both SMTP and IMAP.</p>
 <div class="grid">
 <div class="field"><label>Inbox email address</label><input id="imapEmail" type="email" value="invoice@alfajartravel.co.uk"></div>
 <div class="field"><label>IMAP username</label><input id="imapUser" autocomplete="username" value="invoice@alfajartravel.co.uk"></div>
 <div class="field"><label>IMAP server</label><input id="imapHost" value="imap.hostinger.com"></div>
 <div class="field"><label>IMAP port</label><input id="imapPort" type="number" value="993"></div>
-<div class="field"><label>Mailbox password</label><input id="imapPass" type="password" autocomplete="new-password" placeholder="Enter Hostinger mailbox password"></div>
+
 </div>
 <div class="field"><label><input id="imapSecure" type="checkbox" checked style="width:auto;margin-right:7px">Use SSL/TLS (recommended)</label></div>
-<div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button><button class="ghost" onclick="showTab('inbox')">Open Inbox</button></div>
+<div class="field"><label>Hostinger mailbox password (used for sending and receiving)</label><input id="mailboxPass" type="password" autocomplete="new-password" placeholder="Enter Hostinger mailbox password"></div><div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button><button class="ghost" onclick="showTab('inbox')">Open Inbox</button></div>
 <p class="hint">Hostinger defaults: imap.hostinger.com · port 993 · SSL/TLS. The full email address is used as the username. The mailbox password is never sent to ChatGPT or stored in plain text.</p>
 </div>
 </section>
@@ -378,7 +391,7 @@ async function loadEmailSettings(){
 }
 async function saveEmailSettings(){
  try{
-  const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('smtpPass')||val('imapPass'),imapEmail:val('imapEmail'),imapUser:val('imapUser'),imapHost:val('imapHost'),imapPort:Number(val('imapPort')||993),imapSecure:document.getElementById('imapSecure').checked,imapPassword:val('imapPass')};
+  const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('mailboxPass'),imapEmail:val('imapEmail'),imapUser:val('imapUser'),imapHost:val('imapHost'),imapPort:Number(val('imapPort')||993),imapSecure:document.getElementById('imapSecure').checked,imapPassword:val('mailboxPass')};
   await window.invoiceAPI.saveEmailSettings(settings);
   document.getElementById('smtpPass').value='';
   document.getElementById('imapPass').value='';
