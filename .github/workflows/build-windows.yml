@@ -9,6 +9,11 @@ on:
 permissions:
   contents: write
 
+# Keep only the newest build for this branch running.
+concurrency:
+  group: windows-installer-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: windows-latest
