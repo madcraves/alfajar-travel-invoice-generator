@@ -88,7 +88,7 @@ button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
 .dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.dashboard-panel{background:#fff;border:1px solid #dfe9e4;border-radius:13px;padding:18px}.metric-value{font-size:24px;font-weight:800;color:var(--green)}.dashboard-columns{display:grid;grid-template-columns:1.4fr .8fr;gap:14px}.filter-bar{display:grid;grid-template-columns:1fr 190px;gap:10px;margin:14px 0}.status-pill{border-radius:99px;padding:5px 9px;font-size:10px;font-weight:800;background:#edf3f1}.status-pill.paid{background:#e4f4eb;color:#17633f}.status-pill.partial{background:#fff3d9;color:#8b5a0a}.status-pill.unpaid{background:#fff0ed;color:#a33f32}.status-pill.overdue{background:#fbe4e4;color:#a11f2b}@media(max-width:800px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}.dashboard-columns{grid-template-columns:1fr}}@media(max-width:600px){.filter-bar{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:1fr 1fr}.metric{padding:14px}.metric-value{font-size:20px}}</style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
-<nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabSettings" onclick="showTab('settings')">4. Email Settings</button></nav>
+<nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">5. Email Settings</button></nav>
 <main>
 <section id="dashboard" class="tab active">
 <div class="dashboard-grid">
@@ -121,6 +121,16 @@ Alfajar Travel UK</textarea></div>
 
 </div>
 </section>
+<section id="inbox" class="tab">
+<div class="panel" style="max-width:1200px;margin:0 auto">
+<div class="saved-head"><div><h2 style="margin-bottom:4px">Signed Invoice Inbox</h2><div class="hint">Messages received by invoice@alfajartravel.co.uk. Emails remain on the Hostinger server; the app displays the latest 50 messages.</div></div><button id="refreshInboxBtn" onclick="refreshInbox()">Refresh Inbox</button></div>
+<div id="inboxStatus" class="note" style="margin:12px 0">Connect your Hostinger mailbox in Email Settings, then refresh to receive incoming messages.</div>
+<div class="grid" style="grid-template-columns:minmax(260px,.9fr) minmax(320px,1.4fr);align-items:start">
+<div><div id="inboxList" class="saved-list"><div class="empty">Inbox has not been loaded yet.</div></div></div>
+<div id="inboxMessage" class="panel" style="box-shadow:none;min-height:260px"><div class="empty">Select an email to view its message and attachments.</div></div>
+</div>
+</div>
+</section>
 <section id="settings" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
 <h2>Email Settings</h2>
@@ -137,6 +147,18 @@ Alfajar Travel UK</textarea></div>
 <div class="field"><label><input id="smtpSecure" type="checkbox" style="width:auto;margin-right:7px">Use SSL/TLS (commonly port 465)</label></div>
 <div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button></div>
 <p class="hint">Your SMTP password is encrypted using the computer's secure credential storage. SMTP host, port and security settings depend on your email provider. Use an app password if required.</p>
+<h3>Incoming mailbox — Hostinger IMAP</h3>
+<p class="hint">The Inbox connects to this mailbox to receive signed invoices and PDF attachments. Use the mailbox password for invoice@alfajartravel.co.uk; it is encrypted separately on this computer.</p>
+<div class="grid">
+<div class="field"><label>Inbox email address</label><input id="imapEmail" type="email" value="invoice@alfajartravel.co.uk"></div>
+<div class="field"><label>IMAP username</label><input id="imapUser" autocomplete="username" value="invoice@alfajartravel.co.uk"></div>
+<div class="field"><label>IMAP server</label><input id="imapHost" value="imap.hostinger.com"></div>
+<div class="field"><label>IMAP port</label><input id="imapPort" type="number" value="993"></div>
+<div class="field"><label>Mailbox password</label><input id="imapPass" type="password" autocomplete="new-password" placeholder="Enter Hostinger mailbox password"></div>
+</div>
+<div class="field"><label><input id="imapSecure" type="checkbox" checked style="width:auto;margin-right:7px">Use SSL/TLS (recommended)</label></div>
+<div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button><button class="ghost" onclick="showTab('inbox')">Open Inbox</button></div>
+<p class="hint">Hostinger defaults: imap.hostinger.com · port 993 · SSL/TLS. The full email address is used as the username. The mailbox password is never sent to ChatGPT or stored in plain text.</p>
 </div>
 </section>
 <section id="generator" class="tab">
@@ -294,7 +316,7 @@ function prepareSavedInvoiceEmail(inv){
 }
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
 function printSaved(inv){loadInvoice(inv);printNow()}
-function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');document.getElementById('tabDashboard').classList.toggle('active',which==='dashboard');document.getElementById('tabEmail').classList.toggle('active',which==='email');document.getElementById('tabGenerator').classList.toggle('active',which==='generator');document.getElementById('tabSaved').classList.toggle('active',which==='saved');document.getElementById('tabSettings').classList.toggle('active',which==='settings');if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings()}
+function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
@@ -346,16 +368,50 @@ async function loadEmailSettings(){
   document.getElementById('smtpSecure').checked=Boolean(s.smtpSecure);
   document.getElementById('smtpUser').value=s.smtpUser||'';
   document.getElementById('smtpPass').placeholder=s.hasPassword?'Saved securely — enter a new password to replace':'Enter password or app password';
+  document.getElementById('imapEmail').value=s.imapEmail||'invoice@alfajartravel.co.uk';
+  document.getElementById('imapUser').value=s.imapUser||s.imapEmail||'invoice@alfajartravel.co.uk';
+  document.getElementById('imapHost').value=s.imapHost||'imap.hostinger.com';
+  document.getElementById('imapPort').value=s.imapPort||993;
+  document.getElementById('imapSecure').checked=s.imapSecure!==false;
+  document.getElementById('imapPass').placeholder=s.hasImapPassword?'Saved securely — enter a new password to replace':'Enter Hostinger mailbox password';
  }catch(e){console.error(e)}
 }
 async function saveEmailSettings(){
  try{
-  const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('smtpPass')};
+  const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('smtpPass'),imapEmail:val('imapEmail'),imapUser:val('imapUser'),imapHost:val('imapHost'),imapPort:Number(val('imapPort')||993),imapSecure:document.getElementById('imapSecure').checked,imapPassword:val('imapPass')};
   await window.invoiceAPI.saveEmailSettings(settings);
   document.getElementById('smtpPass').value='';
+  document.getElementById('imapPass').value='';
   alert('Alfajar Travel email settings saved securely.');
   await loadEmailSettings();
  }catch(e){alert('Could not save email settings: '+e.message)}
+}
+let inboxMessages=[];
+let inboxLoaded=false;
+function renderInbox(){
+ const list=document.getElementById('inboxList');
+ document.getElementById('inboxCount').textContent=inboxMessages.length?'('+inboxMessages.length+')':'';
+ if(!inboxMessages.length){list.innerHTML='<div class="empty">No emails found in this mailbox.</div>';return}
+ list.innerHTML=inboxMessages.map((m,i)=>'<button class="ghost" style="display:block;text-align:left;width:100%;padding:13px;margin-bottom:7px;border:1px solid #dce6e2;background:#fff" onclick="openInboxMessage('+i+')"><strong>'+esc(m.subject)+'</strong><div class="meta">'+esc(m.from)+' · '+esc(new Date(m.date).toLocaleString())+'</div><div class="meta">'+(m.unread?'<b>Unread</b> · ':'')+(m.signedCandidate?'<span class="status-pill partial">Possible signed invoice</span>':'')+' · '+m.attachments.length+' attachment(s)</div></button>').join('');
+}
+function openInboxMessage(index){
+ const m=inboxMessages[index];if(!m)return;
+ const attachments=m.attachments.map(a=>'<div class="invoice-row"><div><strong>'+esc(a.filename)+'</strong><div class="meta">'+esc(a.contentType||'File')+' · '+Math.max(1,Math.round((a.size||0)/1024))+' KB</div></div><button onclick="downloadInboxAttachment(\''+esc(a.id)+'\')">Download attachment</button></div>').join('');
+ document.getElementById('inboxMessage').innerHTML='<h2>'+esc(m.subject)+'</h2><div class="hint">From: '+esc(m.from)+'<br>Received: '+esc(new Date(m.date).toLocaleString())+'</div><div style="margin:14px 0">'+(m.signedCandidate?'<span class="status-pill partial">Possible signed invoice / PDF</span>':'<span class="status-pill">Email</span>')+'</div><div class="content" style="white-space:pre-wrap;min-height:100px">'+esc(m.text||'(No plain-text message body)')+'</div><h3>Attachments</h3>'+(attachments||'<div class="empty">No attachments in this email.</div>');
+}
+async function refreshInbox(){
+ const b=document.getElementById('refreshInboxBtn'),status=document.getElementById('inboxStatus');
+ b.disabled=true;b.textContent='Connecting...';status.textContent='Connecting securely to Hostinger IMAP and checking the latest 50 emails…';
+ try{
+  inboxMessages=await window.invoiceAPI.getInboxEmails();inboxLoaded=true;renderInbox();
+  status.textContent='Connected to invoice@alfajartravel.co.uk. '+inboxMessages.length+' recent email(s) loaded. Emails remain on the Hostinger server.';
+  if(inboxMessages.length)openInboxMessage(0);
+ }catch(e){status.textContent='Inbox connection failed: '+e.message+' Check the mailbox password and IMAP settings in Email Settings.';inboxLoaded=false}
+ finally{b.disabled=false;b.textContent='Refresh Inbox'}
+}
+async function downloadInboxAttachment(id){
+ try{const result=await window.invoiceAPI.saveInboxAttachment(id);if(!result.canceled)alert('Attachment saved successfully.')}
+ catch(e){alert('Could not save attachment: '+e.message)}
 }
 async function sendInvoiceEmail(){
  const to=val('emailTo')||val('leadEmail');
