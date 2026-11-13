@@ -143,6 +143,29 @@ textarea, select, [contenteditable="true"] {
 }
 
 /* Saved invoice edit popup */
+/* Reuse the same structured generator form styling inside the edit dialog. */
+#invoiceEditFields .generator-main-column,#invoiceEditFields .generator-side-column{display:grid;gap:15px;min-width:0}
+#invoiceEditFields .generator-section{background:#fff;border:1px solid #e0e9e5;border-radius:13px;padding:21px 22px;min-width:0}
+#invoiceEditFields .generator-section-heading{display:flex;align-items:center;gap:12px;padding-bottom:15px;margin-bottom:17px;border-bottom:1px solid #edf1ef}
+#invoiceEditFields .section-number{display:flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;border-radius:9px;background:#edf4f1;color:#28594f;font-size:11px;font-weight:750}
+#invoiceEditFields .generator-section-heading h3{margin:0 0 4px;padding:0;border:0;font-size:13px;font-weight:700;letter-spacing:.015em;text-transform:none;color:#254940}
+#invoiceEditFields .generator-section-heading p{margin:0;font-size:11px;color:#87958f}
+#invoiceEditFields .generator-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:0 13px}
+#invoiceEditFields .generator-fields.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}
+#invoiceEditFields .generator-fields .field{min-width:0;margin:0 0 14px}
+#invoiceEditFields .generator-fields .field:last-child{margin-bottom:0}
+#invoiceEditFields .generator-fields .field.full-width{grid-column:1/-1}
+#invoiceEditFields .generator-fields .field label{display:block;margin:0 0 6px;font-size:11px;font-weight:650;color:#50645e}
+#invoiceEditFields .generator-fields input,#invoiceEditFields .generator-fields textarea{display:block;width:100%;min-width:0;min-height:40px;padding:10px 11px;border:1px solid #d8e2dd;border-radius:7px;background:#fbfcfb;color:#203b35;font:13px Inter,"Segoe UI",Arial,sans-serif;line-height:1.45;box-shadow:none}
+#invoiceEditFields .generator-fields textarea{min-height:82px;resize:vertical}
+#invoiceEditFields .generator-fields input:focus,#invoiceEditFields .generator-fields textarea:focus{background:#fff;border-color:#286b5e;box-shadow:0 0 0 3px rgba(40,107,94,.10);outline:none}
+#invoiceEditFields .generator-fields input[readonly]{background:#f1f6f3;color:#315b50;font-weight:650}
+#invoiceEditFields .generator-fields small{display:block;margin-top:5px;font-size:10px;color:#84928c;line-height:1.5}
+#invoiceEditFields .input-prefix{display:flex;align-items:center;min-width:0;border:1px solid #d8e2dd;border-radius:7px;background:#fbfcfb;overflow:hidden}
+#invoiceEditFields .input-prefix>span{padding:0 10px;color:#75857e;font-size:12px;border-right:1px solid #e4ebe7}
+#invoiceEditFields .input-prefix input{border:0;border-radius:0;background:transparent;box-shadow:none}
+#invoiceEditFields .company-section .generator-fields textarea{min-height:80px}
+
 .invoice-edit-overlay{z-index:10001;align-items:flex-start;overflow:auto;padding:20px}
 .invoice-edit-dialog{width:min(100%,1120px);margin:auto;background:#f4f7f5;border-radius:16px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.28)}
 .invoice-edit-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:2px 2px 16px}
