@@ -548,14 +548,16 @@ async function sendInvoiceEmail(){
   // The main process creates the PDF from the currently visible page.
   // Show the invoice preview while generating the attachment, then return to Email.
   showTab('generator');
+  showInvoicePreview();
   const emailSubject=val('emailSubject').trim();
   const requiredSubjectPrefix='Alfajar Travel invoice';
   const finalSubject=emailSubject.toLowerCase().startsWith(requiredSubjectPrefix.toLowerCase())?emailSubject:requiredSubjectPrefix+(emailSubject?' - '+emailSubject:'');
   document.getElementById('emailSubject').value=finalSubject;
   await window.invoiceAPI.sendInvoiceEmail({to,subject:finalSubject,message:val('emailMessage'),invoiceNumber:val('inv')});
+  closeInvoicePreview();
   showTab(previousTab);
   alert('Invoice '+val('inv')+' emailed successfully to '+to+'.');
- }catch(e){showTab(previousTab);alert('Email could not be sent: '+e.message)}
+ }catch(e){closeInvoicePreview();showTab(previousTab);alert('Email could not be sent: '+e.message)}
 }
 
 function showInvoicePreview(){updatePreview();const modal=document.getElementById('invoicePreviewModal');modal.hidden=false;document.body.style.overflow='hidden';}
