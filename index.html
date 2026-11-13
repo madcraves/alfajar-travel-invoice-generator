@@ -36,6 +36,55 @@ button:hover{filter:brightness(1.08)}button.secondary{background:#e8dba8;color:#
 @media(max-width:1050px){.workspace{grid-template-columns:1fr}.form-panel{max-height:none}.paper{min-height:0}}
 @media(max-width:600px){header{padding:10px 14px}header img{width:56px;height:52px}header h1{font-size:18px}nav{padding:12px 12px 0}main{padding:12px}.grid,.kv{grid-template-columns:1fr}.money{grid-template-columns:1fr 1fr}.paper{padding:18px}.invoice-row{align-items:flex-start;flex-direction:column}.paperHead img{width:82px}}
 @media print{body{background:#fff}.top,header,nav,.form-panel,.saved-panel,.no-print{display:none!important}main{padding:0;margin:0}.tab{display:none!important}#generator.tab{display:block!important}.workspace{display:block}.preview-wrap{display:block}.paper{border:0;box-shadow:none;border-radius:0;padding:0;min-height:0}.paperHead img{width:90px;height:70px}@page{size:A4;margin:12mm}}
+
+/* Professional interface refinement */
+:root{--green:#123f3a;--green2:#1d6258;--gold:#c5a34a;--ink:#1e302d;--muted:#667873;--line:#d9e4df;--bg:#eef3f1;--white:#fff;--shadow:0 12px 34px rgba(18,63,58,.07)}
+body{font-family:Inter,"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#f7f9f8 0,#edf3f1 320px);color:var(--ink);letter-spacing:.005em}
+header.top{position:relative;padding:17px clamp(16px,3vw,38px);border-bottom:1px solid #e6d7aa;box-shadow:0 5px 22px rgba(18,63,58,.06)}
+header img{width:82px;height:70px}
+header h1{font-size:23px;font-weight:750;letter-spacing:-.035em}
+header p{font-size:12px;letter-spacing:.025em}
+nav{padding:18px 22px 0;gap:7px}
+nav button{border:1px solid transparent;border-radius:9px 9px 0 0;padding:12px 17px;background:transparent;color:#64756f;font-weight:650;transition:background .18s,color .18s,transform .18s}
+nav button:hover{background:#e4ece8;color:var(--green);filter:none}
+nav button.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 5px 12px rgba(18,63,58,.14)}
+main{padding-top:20px}
+.panel,.saved-panel{border:1px solid #e0e9e5;border-radius:15px;padding:22px;box-shadow:var(--shadow)}
+.form-panel{scrollbar-width:thin;scrollbar-color:#c5d4cd transparent}
+h2{font-size:19px;font-weight:750;letter-spacing:-.025em}
+h3{font-size:11px;font-weight:800;letter-spacing:.09em;color:#56716a;margin-top:24px;padding-bottom:9px}
+.field{margin-bottom:13px}
+.field label{font-size:11px;font-weight:700;color:#526761;letter-spacing:.015em}
+input,textarea{font:inherit;font-size:13px;padding:11px 12px;border:1px solid #d6e1dc;border-radius:8px;transition:border-color .15s,box-shadow .15s,background .15s}
+input:hover,textarea:hover{border-color:#b8cbc2}
+input:focus,textarea:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(29,98,88,.12)}
+input[type=checkbox]{accent-color:var(--green2)}
+button{font-size:12px;font-weight:700;padding:11px 16px;border-radius:8px;transition:transform .15s,box-shadow .15s,background .15s}
+button:not(:disabled):hover{filter:none;transform:translateY(-1px);box-shadow:0 5px 12px rgba(18,63,58,.12)}
+button:focus-visible{outline:3px solid rgba(197,163,74,.55);outline-offset:2px}
+button:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+button.secondary{background:#f2ead0;color:#4e4528}
+button.ghost{background:#edf4f1;color:var(--green);border:1px solid #dce8e2}
+button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
+.hint{font-size:11px;line-height:1.65;color:#71817b}
+.paper{border:1px solid #e1e8e4;border-radius:4px;padding:36px 40px;box-shadow:0 12px 38px rgba(26,55,47,.08);background:#fff}
+.paperHead{border-bottom:2px solid var(--gold);padding-bottom:18px}
+.paperHead h2{font-size:21px;letter-spacing:.04em}
+.invoice-title{font-size:21px;font-weight:800;letter-spacing:.22em;margin:25px 0;color:var(--green)}
+.cell{border:1px solid #e1e8e4;border-radius:7px;padding:11px}
+.cell b{color:#60766e;font-size:9px;letter-spacing:.09em}
+.money .cell:last-child{background:#f2f7f4;border-color:#cbded4}
+.money .cell:last-child span{font-weight:800;color:var(--green)}
+.note{background:#fbf8ee;border-left:3px solid var(--gold);border-radius:0 7px 7px 0;padding:12px}
+.invoice-row{border-color:#e1e9e5;border-radius:11px;padding:16px;transition:border-color .15s,box-shadow .15s}
+.invoice-row:hover{border-color:#b9cec4;box-shadow:0 5px 18px rgba(18,63,58,.06)}
+.invoice-row strong{font-size:14px}
+.empty{background:#fafcfb;padding:46px 24px;line-height:1.8}
+#updateStatus{font-weight:650}
+@media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr)}.form-panel{max-height:none}}
+@media(max-width:600px){header.top{align-items:flex-start;gap:10px}header img{width:54px;height:50px}header h1{font-size:18px}.header-actions{flex-direction:column;align-items:flex-end}nav{gap:5px}nav button{padding:10px 11px;font-size:11px}main{padding:12px}.panel,.saved-panel{padding:16px}.paper{padding:20px 16px}.paperHead{gap:8px}.paperHead h2{font-size:15px}}
+@media print{body{background:#fff}.paper{border:0;box-shadow:none;border-radius:0;padding:0}.paperHead{border-bottom:2px solid #c5a34a}.cell{break-inside:avoid}.money{grid-template-columns:repeat(4,1fr)}}
+
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
