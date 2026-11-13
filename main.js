@@ -34,9 +34,6 @@ function writeEmailSettings(settings) {
     return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted), inboxConfigured: Boolean(stored.imapEmail && stored.imapHost && stored.imapUser && passwordEncrypted) };
 }
 
-const sentboxPath = () => path.join(app.getPath('userData'), 'sentbox.json');
-function readSentbox() { try { const data = JSON.parse(fs.readFileSync(sentboxPath(), 'utf8')); return Array.isArray(data) ? data : []; } catch (_) { return []; } }
-function saveSentbox(items) { fs.writeFileSync(sentboxPath(), JSON.stringify(items.slice(0, 500), null, 2), { mode: 0o600 }); }
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
