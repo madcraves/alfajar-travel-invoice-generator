@@ -16,18 +16,18 @@ function readEmailSettings() {
     try {
         const saved = JSON.parse(fs.readFileSync(emailSettingsPath(), 'utf8'));
         const decrypt = (value) => value && safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(value, 'base64')) : '';
-        const sharedPassword = decrypt(saved.passwordEncrypted) || decrypt(saved.imapPasswordEncrypted);\n        return { ...saved, password: sharedPassword, imapPassword: sharedPassword };
+        const sharedPassword = decrypt(saved.passwordEncrypted) || decrypt(saved.imapPasswordEncrypted);
     } catch (_) { return {}; }
 }
 function writeEmailSettings(settings) {
     if (!safeStorage.isEncryptionAvailable()) throw new Error('Secure credential storage is not available on this computer.');
-    const passwordEncrypted = settings.password ? safeStorage.encryptString(settings.password).toString('base64') : '';
-    const imapPasswordEncrypted = settings.imapPassword ? safeStorage.encryptString(settings.imapPassword).toString('base64') : '';
+    const sharedPassword = String(settings.password || settings.imapPassword || '').trim();
+    const passwordEncrypted = sharedPassword ? safeStorage.encryptString(sharedPassword).toString('base64') : '';
     const stored = {
         fromEmail: String(settings.fromEmail || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(),
         smtpHost: String(settings.smtpHost || 'smtp.hostinger.com').trim(), smtpPort: Number(settings.smtpPort || 465), smtpSecure: settings.smtpSecure !== false, smtpUser: String(settings.smtpUser || settings.fromEmail || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), passwordEncrypted,
         imapEmail: String(settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapHost: String(settings.imapHost || 'imap.hostinger.com').trim(),
-        imapPort: Number(settings.imapPort || 993), imapSecure: settings.imapSecure !== false, imapUser: String(settings.imapUser || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapPasswordEncrypted
+        imapPort: Number(settings.imapPort || 993), imapSecure: settings.imapSecure !== false, imapUser: String(settings.imapUser || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), passwordEncrypted
     };
     fs.writeFileSync(emailSettingsPath(), JSON.stringify(stored, null, 2), { mode: 0o600 });
     return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted), inboxConfigured: Boolean(stored.imapEmail && stored.imapHost && stored.imapUser && imapPasswordEncrypted) };
@@ -163,9 +163,9 @@ ipcMain.handle('get-email-settings', async () => {
 ipcMain.handle('save-email-settings', async (_event, settings) => {
     if (!settings || !settings.fromEmail || !settings.smtpHost || !settings.smtpUser) throw new Error('Please enter the sender email, SMTP host and SMTP username.');
     const current = readEmailSettings();
-    if (!settings.password && current.password) settings.password = current.password;
-    if (!settings.password) throw new Error('Please enter the SMTP password or app password.');
-    if (!settings.imapPassword && current.imapPassword) settings.imapPassword = current.imapPassword;
+    const sharedPassword = settings.password || settings.imapPassword || current.password || current.imapPassword;
+    if (!sharedPassword) throw new Error('Please enter the Hostinger mailbox password.');
+    settings.password = sharedPassword;
     return writeEmailSettings(settings);
 });
 
