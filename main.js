@@ -184,7 +184,35 @@ ipcMain.handle('get-email-connection-status', async () => {
  try { await client.connect(); result.receiving = { state: 'connected', message: 'IMAP connection and authentication successful.' }; } catch (e) { result.receiving = { state: 'error', message: e.message }; } finally { try { await client.logout(); } catch (_) {} }
  result.checkedAt = new Date().toISOString(); return result;
 });
-ipcMain.handle('get-sent-emails', async () => readSentbox());
+async function findSentMailbox(client) {
+ const folders=await client.list();
+ const sentFolder=folders.find(folder=>String(folder.specialUse||'').toLowerCase()==='\\sent')||folders.find(folder=>/^(sent|sent items|sent messages|inbox[./]sent)$/i.test(String(folder.path||'')))||folders.find(folder=>/sent/i.test(String(folder.path||'')));
+ if(!sentFolder)throw new Error('Hostinger Sent folder was not found. Check the mailbox folders in Hostinger Webmail.');
+ return sentFolder.path;
+}
+function base64Lines(value){return Buffer.from(value).toString('base64').replace(/.{1,76}/g,'$&\r\n').trim()}
+function makeInvoiceEmailMime({from,to,subject,text,filename,pdf}){
+ const boundary='----AlfajarInvoice'+Date.now().toString(16),encodedSubject='=?UTF-8?B?'+Buffer.from(subject,'utf8').toString('base64')+'?=',safeFilename=String(filename).replace(/["\r\n]/g,'_');
+ return ['From: '+from,'To: '+to,'Date: '+new Date().toUTCString(),'Subject: '+encodedSubject,'MIME-Version: 1.0','Content-Type: multipart/mixed; boundary="'+boundary+'"','','--'+boundary,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',base64Lines(text),'--'+boundary,'Content-Type: application/pdf; name="'+safeFilename+'"','Content-Transfer-Encoding: base64','Content-Disposition: attachment; filename="'+safeFilename+'"','',base64Lines(pdf),'--'+boundary+'--',''].join('\r\n');
+}
+ipcMain.handle('get-sent-emails',async()=>{
+ const settings=readEmailSettings();
+ if(!settings.imapEmail||!settings.imapHost||!settings.imapUser||!settings.imapPassword)throw new Error('Configure the Hostinger mailbox in Email Settings first.');
+ const client=new ImapFlow({host:settings.imapHost,port:Number(settings.imapPort||993),secure:settings.imapSecure!==false,auth:{user:settings.imapUser,pass:settings.imapPassword},logger:false}),messages=[];
+ try{
+  await client.connect();const folder=await findSentMailbox(client),lock=await client.getMailboxLock(folder);
+  try{
+   const uids=await client.search({all:true},{uid:true});
+   for(const uid of (uids||[]).slice(-100).reverse()){
+    for await(const msg of client.fetch(String(uid),{uid:true,internalDate:true,source:true},{uid:true})){
+     const parsed=await simpleParser(msg.source),recipient=parsed.to?.value?.[0]||{},attachments=parsed.attachments||[],pdfAttachment=attachments.find(a=>/\.pdf$/i.test(a.filename||'')),subject=String(parsed.subject||'(No subject)'),match=subject.match(/AT-\d{4}-\d+/i)||(pdfAttachment?.filename||'').match(/AT-\d{4}-\d+/i);
+     messages.push({id:String(msg.uid),to:recipient.name?recipient.name+' <'+(recipient.address||'')+'>':(recipient.address||''),from:parsed.from?.text||settings.fromEmail,subject,invoiceNumber:match?match[0]:'',sentAt:(parsed.date||msg.internalDate||new Date()).toISOString(),status:'sent',attachment:pdfAttachment?.filename||(attachments.length?attachments[0].filename:'No attachment')});
+    }
+   }
+  }finally{lock.release()}
+ }finally{try{await client.logout()}catch(_){}}
+ return messages;
+});
 ipcMain.handle('get-inbox-emails', async () => {
     const settings = readEmailSettings();
     if (!settings.imapEmail || !settings.imapHost || !settings.imapUser || !settings.imapPassword) throw new Error('Open Email Settings and enter the invoice@alfajartravel.co.uk mailbox password first.');
@@ -237,24 +265,23 @@ ipcMain.handle('save-inbox-attachment', async (event, attachmentId) => {
     return { canceled: false, filePath: result.filePath };
 });
 
-ipcMain.handle('send-invoice-email', async (event, payload) => {
-    const settings = readEmailSettings();
-    if (!settings.fromEmail || !settings.smtpHost || !settings.smtpUser || !settings.password) throw new Error('Please configure and save your Alfajar Travel email settings first.');
-    if (!payload || !/^\S+@\S+\.\S+$/.test(String(payload.to || ''))) throw new Error('Enter a valid lead passenger email address.');
-    const win = BrowserWindow.fromWebContents(event.sender);
-    const pdf = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 } });
-    const transporter = nodemailer.createTransport({ host: settings.smtpHost, port: Number(settings.smtpPort || 587), secure: Boolean(settings.smtpSecure), auth: { user: settings.smtpUser, pass: settings.password } });
-    await transporter.sendMail({
-        from: { name: settings.fromName || 'Alfajar Travel UK', address: settings.fromEmail },
-        to: String(payload.to).trim(),
-        subject: String(payload.subject || 'Your Alfajar Travel invoice'),
-        text: String(payload.message || 'Please find your invoice attached. Thank you for booking with Alfajar Travel.'),
-        attachments: [{ filename: String(payload.invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-') + '.pdf', content: pdf, contentType: 'application/pdf' }]
-    });
-    const sent = readSentbox();
-    sent.unshift({ id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 8), to: String(payload.to).trim(), from: settings.fromEmail, subject: String(payload.subject || 'Your Alfajar Travel invoice'), invoiceNumber: String(payload.invoiceNumber || ''), sentAt: new Date().toISOString(), status: 'sent', attachment: String(payload.invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-') + '.pdf' });
-    saveSentbox(sent);
-    return { sent: true };
+ipcMain.handle('send-invoice-email',async(event,payload)=>{
+ const settings=readEmailSettings();
+ if(!settings.fromEmail||!settings.smtpHost||!settings.smtpUser||!settings.password)throw new Error('Please configure and save your Alfajar Travel email settings first.');
+ if(!settings.imapHost||!settings.imapUser||!settings.imapPassword)throw new Error('Configure the Hostinger IMAP mailbox to archive sent invoices.');
+ if(!payload||!/^\S+@\S+\.\S+$/.test(String(payload.to||'')))throw new Error('Enter a valid lead passenger email address.');
+ const win=BrowserWindow.fromWebContents(event.sender),pdf=await win.webContents.printToPDF({printBackground:true,pageSize:'A4',margins:{top:0.35,bottom:0.35,left:0.35,right:0.35}});
+ const recipient=String(payload.to).trim(),subject=String(payload.subject||'Your Alfajar Travel invoice'),message=String(payload.message||'Please find your invoice attached. Thank you for booking with Alfajar Travel.'),attachment=String(payload.invoiceNumber||'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi,'-')+'.pdf';
+ const transporter=nodemailer.createTransport({host:settings.smtpHost,port:Number(settings.smtpPort||465),secure:Boolean(settings.smtpSecure),auth:{user:settings.smtpUser,pass:settings.password}});
+ await transporter.sendMail({from:{name:settings.fromName||'Alfajar Travel UK',address:settings.fromEmail},to:recipient,subject,text:message,attachments:[{filename:attachment,content:pdf,contentType:'application/pdf'}]});
+ const archiveClient=new ImapFlow({host:settings.imapHost,port:Number(settings.imapPort||993),secure:settings.imapSecure!==false,auth:{user:settings.imapUser,pass:settings.imapPassword},logger:false});
+ try{
+  await archiveClient.connect();const sentFolder=await findSentMailbox(archiveClient);
+  const rawMessage=makeInvoiceEmailMime({from:(settings.fromName||'Alfajar Travel UK')+' <'+settings.fromEmail+'>',to:recipient,subject,text:message,filename:attachment,pdf});
+  await archiveClient.append(sentFolder,Buffer.from(rawMessage,'utf8'),['\\Seen'],new Date());
+ }catch(archiveError){console.error('Invoice email sent, but Hostinger Sent-folder archiving failed:',archiveError);return{sent:true,archived:false,archiveError:archiveError.message}}
+ finally{try{await archiveClient.logout()}catch(_){}}
+ return{sent:true,archived:true};
 });
 
 // Save invoice as PDF
