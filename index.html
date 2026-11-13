@@ -191,7 +191,7 @@ Alfajar Travel UK</textarea></div>
 <div class="panel" style="max-width:1200px;margin:0 auto">
 <div class="saved-head"><div><h2 style="margin-bottom:4px">Sentbox</h2><div class="hint">Successfully sent invoice emails from the configured Alfajar Travel mailbox.</div></div><button id="refreshSentboxBtn" onclick="refreshSentbox()">Refresh Sentbox</button></div>
 <div id="sentboxStatus" class="note" style="margin:12px 0">Loading sent email history…</div>
-<div id="sentboxList" class="saved-list"><div class="empty">No sent emails recorded yet.</div></div>
+<div id="sentboxList" class="saved-list"><div class="empty">No sent emails found in the Hostinger Sent folder.</div></div>
 </div></section>
 <section id="settings" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
@@ -444,7 +444,7 @@ function renderSentbox(){
 }
 async function refreshSentbox(){
  const b=document.getElementById('refreshSentboxBtn'),status=document.getElementById('sentboxStatus');if(b){b.disabled=true;b.textContent='Loading…'}
- try{sentEmails=await window.invoiceAPI.getSentEmails();renderSentbox();status.textContent=sentEmails.length+' sent email(s) recorded on this computer. This is the app’s local sent history.';}
+ try{sentEmails=await window.invoiceAPI.getSentEmails();renderSentbox();status.textContent=sentEmails.length+' email(s) loaded directly from the Hostinger server Sent folder.';}
  catch(e){status.textContent='Could not load sentbox: '+e.message}
  finally{if(b){b.disabled=false;b.textContent='Refresh Sentbox'}}
 }
@@ -553,10 +553,10 @@ async function sendInvoiceEmail(){
   const requiredSubjectPrefix='Alfajar Travel invoice';
   const finalSubject=emailSubject.toLowerCase().startsWith(requiredSubjectPrefix.toLowerCase())?emailSubject:requiredSubjectPrefix+(emailSubject?' - '+emailSubject:'');
   document.getElementById('emailSubject').value=finalSubject;
-  await window.invoiceAPI.sendInvoiceEmail({to,subject:finalSubject,message:val('emailMessage'),invoiceNumber:val('inv')});
+  const sendResult=await window.invoiceAPI.sendInvoiceEmail({to,subject:finalSubject,message:val('emailMessage'),invoiceNumber:val('inv')});
   closeInvoicePreview();
   showTab(previousTab);
-  alert('Invoice '+val('inv')+' emailed successfully to '+to+'.');
+  alert('Invoice '+val('inv')+' emailed successfully to '+to+'.'+(sendResult?.archived?' A copy is saved in Hostinger Sent.':' WARNING: Email was sent, but it could not be copied to Hostinger Sent. '+(sendResult?.archiveError||'Please check the mailbox connection.')));
  }catch(e){closeInvoicePreview();showTab(previousTab);alert('Email could not be sent: '+e.message)}
 }
 
