@@ -104,7 +104,8 @@ button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
 </div></section><section id="email" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
 <h2>Email Invoice</h2>
-<p class="hint">Send the current invoice PDF to the lead passenger. Enter the passenger email in Invoice Generator first, or type it below.</p>
+<p class="hint">Send the selected invoice PDF to its lead passenger. The recipient is loaded automatically from the saved invoice.</p>
+<div id="emailInvoiceContext" class="note" style="margin:12px 0">No saved invoice selected. Choose Send Email from a saved invoice, or enter an address manually.</div>
 <h3>Email invoice</h3>
 <div class="field"><label>Send invoice to lead passenger</label><input id="emailTo" type="email" placeholder="Lead passenger email address"></div>
 <div class="field"><label>Email subject</label><input id="emailSubject" value="Your Alfajar Travel invoice"></div>
@@ -257,7 +258,7 @@ const summary=document.getElementById('invoiceResultsSummary');
 if(summary)summary.textContent='Showing '+filtered.length+' of '+all.length+' invoice'+(all.length===1?'':'s');
 if(!all.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use Invoice Generator to create and save your first invoice.</div>';return}
 if(!filtered.length){list.innerHTML='<div class="empty">No invoices match your search or payment filter.<br>Try another search term or select “All statuses”.</div>';return}
-list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+(x.dueDate?' · Due: '+esc(x.dueDate):'')+'</div></div><div class="row-actions"><button onclick="loadInvoice(decodeURIComponent(\''+key+'\'))">Open / Edit</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
+list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+(x.dueDate?' · Due: '+esc(x.dueDate):'')+'</div></div><div class="row-actions"><button onclick="loadInvoice(decodeURIComponent(\''+key+'\'))">Open / Edit</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button onclick="prepareSavedInvoiceEmail(decodeURIComponent(\''+key+'\'))">Send Email</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
 }
 function recordPayment(inv){
 const all=invoices(),index=all.findIndex(x=>String(x.inv)===String(inv));if(index<0)return;
@@ -275,7 +276,22 @@ current.updatedAt=new Date().toISOString();
 all[index]=current;setInvoices(all);
 alert('Payment of £'+amount.toFixed(2)+' recorded for invoice '+inv+'.');
 }
-function loadInvoice(inv){const d=invoices().find(x=>x.inv===inv);if(!d)return;ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=d[id]??''});document.getElementById('emailTo').value=d.leadEmail||'';updatePreview();showTab('generator')}
+function applyInvoiceToForm(d){
+ ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=d[id]??''});
+ updatePreview();
+}
+function loadInvoice(inv){const d=invoices().find(x=>String(x.inv)===String(inv));if(!d)return;applyInvoiceToForm(d);document.getElementById('emailTo').value=d.leadEmail||'';showTab('generator')}
+function prepareSavedInvoiceEmail(inv){
+ const d=invoices().find(x=>String(x.inv)===String(inv));if(!d)return;
+ applyInvoiceToForm(d);
+ const recipient=document.getElementById('emailTo');
+ recipient.value=String(d.leadEmail||'').trim();
+ document.getElementById('emailSubject').value='Your Alfajar Travel invoice '+String(d.inv||'');
+ const context=document.getElementById('emailInvoiceContext');
+ context.textContent='Selected invoice: '+String(d.inv||'')+' · Lead passenger: '+String(d.customer||'Not specified')+' · Recipient: '+(recipient.value||'No email address saved — enter one below');
+ showTab('email');
+ if(!recipient.value)recipient.focus();
+}
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
 function printSaved(inv){loadInvoice(inv);printNow()}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');document.getElementById('tabDashboard').classList.toggle('active',which==='dashboard');document.getElementById('tabEmail').classList.toggle('active',which==='email');document.getElementById('tabGenerator').classList.toggle('active',which==='generator');document.getElementById('tabSaved').classList.toggle('active',which==='saved');document.getElementById('tabSettings').classList.toggle('active',which==='settings');if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings()}
@@ -342,14 +358,19 @@ async function saveEmailSettings(){
  }catch(e){alert('Could not save email settings: '+e.message)}
 }
 async function sendInvoiceEmail(){
- updatePreview();
  const to=val('emailTo')||val('leadEmail');
  if(!to){alert('Enter the lead passenger email address first.');return;}
- if(!val('inv')){alert('Please enter an invoice number first.');return;}
+ if(!val('inv')){alert('Please select or enter an invoice first.');return;}
+ const previousTab=document.querySelector('.tab.active')?.id||'email';
  try{
+  updatePreview();
+  // The main process creates the PDF from the currently visible page.
+  // Show the invoice preview while generating the attachment, then return to Email.
+  showTab('generator');
   await window.invoiceAPI.sendInvoiceEmail({to,subject:val('emailSubject'),message:val('emailMessage'),invoiceNumber:val('inv')});
-  alert('Invoice email sent successfully to '+to+'.');
- }catch(e){alert('Email could not be sent: '+e.message)}
+  showTab(previousTab);
+  alert('Invoice '+val('inv')+' emailed successfully to '+to+'.');
+ }catch(e){showTab(previousTab);alert('Email could not be sent: '+e.message)}
 }
 
 function printNow(){updatePreview();window.invoiceAPI.print()}
