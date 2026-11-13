@@ -533,7 +533,7 @@ function paymentInfo(x){
 }
 function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Unpaid',overdue:'Overdue'})[s]||'Unpaid'}
 function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
-function disclaimerMarkup(value){let html=esc(String(value||''));html=html.replace(/(\\+44\\s*7465\\s*796629)/g,'<strong>$1</strong>');html=html.replace(/(book@alfajartravel\\.co\\.uk)/gi,'<strong>$1</strong>');return html;}
+function disclaimerMarkup(value){let html=esc(String(value||''));html=html.replace(/(\+44\s*7465\s*796629)/g,'<strong>$1</strong>');html=html.replace(/(book@alfajartravel\.co\.uk)/gi,'<strong>$1</strong>');return html;}
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
