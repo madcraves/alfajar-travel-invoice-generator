@@ -241,6 +241,9 @@ textarea, select, [contenteditable="true"] {
 #invoiceEditFields .accommodation-card .meal-options{display:flex;flex-wrap:wrap;gap:18px;padding:12px 14px;background:#f0f6f2;border-radius:8px}
 #invoiceEditFields .accommodation-card .meal-options[hidden]{display:none!important}
 .invoice-disclaimer{margin-top:18px;padding:14px 15px;border:1px solid #f0b6b6;border-left:4px solid #c62828;border-radius:7px;background:#fff5f5}.invoice-disclaimer-heading{font-size:11px;font-weight:800;letter-spacing:.04em;color:#b42318;margin-bottom:8px;text-transform:uppercase}.invoice-disclaimer .content{font-size:10px;line-height:1.55;color:#b42318}.bank-details-section .generator-fields{gap:0 13px}
+
+/* Clean, aligned accommodation details in the generated invoice */
+.accommodation-city-block{margin:10px 0 15px;break-inside:avoid}.accommodation-city-block h4{margin:0 0 8px;color:#214b43;font-size:12px;font-weight:750;letter-spacing:.025em}.accommodation-preview{border:1px solid #dfe9e4;border-radius:8px;overflow:hidden;background:#fff}.accommodation-detail-grid{display:grid;grid-template-columns:1fr 1fr}.accommodation-detail-row{display:grid;grid-template-columns:minmax(95px,.7fr) minmax(0,1.3fr);gap:9px;align-items:start;padding:9px 11px;border-bottom:1px solid #edf1ef;min-width:0}.accommodation-detail-row:nth-child(odd){background:#f8faf9}.accommodation-detail-row:nth-last-child(-n+2){border-bottom:0}.accommodation-detail-row span{font-size:10px;color:#667873;font-weight:650}.accommodation-detail-row strong{font-size:11px;color:#243b35;font-weight:650;overflow-wrap:anywhere}.accommodation-empty{padding:10px 12px;color:#87958f;font-size:10px;font-style:italic}@media(max-width:600px){.accommodation-detail-grid{grid-template-columns:1fr}.accommodation-detail-row:nth-last-child(2){border-bottom:1px solid #edf1ef}}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -447,7 +450,7 @@ Alfajar Travel UK</textarea></div>
 <h3>Visa details</h3><div class="content" id="p_visa"></div>
 <h3>Ticket Info</h3><div class="content" id="p_ticketInfo"></div>
 <h3>Flight details</h3><div class="content" id="p_flights"></div>
-<h3>Accommodation</h3><h4>Makkah</h4><div class="content" id="p_hotels"></div><h4>Madinah</h4><div class="content" id="p_madinahHotels"></div>
+<h3>Accommodation</h3><div class="accommodation-city-block"><h4>Makkah</h4><div id="p_hotels" class="accommodation-preview"></div></div><div class="accommodation-city-block"><h4>Madinah</h4><div id="p_madinahHotels" class="accommodation-preview"></div></div>
 <h3>Ground transportation</h3><div class="content" id="p_transport"></div>
 <h3>Payment summary</h3><div class="money">
 <div class="cell"><b>Total payable</b><span id="p_total"></span></div><div class="cell"><b>Amount received</b><span id="p_received"></span></div><div class="cell"><b>Other credit</b><span id="p_credit"></span></div><div class="cell"><b>Balance</b><span id="p_balance"></span></div></div><div class="small" style="margin-top:7px">Payment status: <strong id="p_paymentStatus"></strong></div>
@@ -504,7 +507,23 @@ function fieldValue(el){return el?.type==='checkbox'?(el.checked?'yes':'no'):Str
 function setFieldValue(el,value){if(!el)return;if(el.type==='checkbox')el.checked=value===true||value==='yes'||value==='true'||value===1;else el.value=value??''}
 function toggleMealOptions(checkbox){const card=checkbox.closest('.accommodation-card');const options=card?.querySelector('[data-meal-options]');if(options)options.hidden=!checkbox.checked;}
 function accommodationSummaryFromPrefix(prefix,city){const name=document.getElementById(prefix+city+'HotelName')?.value?.trim()||'',room=document.getElementById(prefix+city+'RoomType')?.value?.trim()||'',inDate=document.getElementById(prefix+city+'Checkin')?.value||'',outDate=document.getElementById(prefix+city+'Checkout')?.value||'',included=!!document.getElementById(prefix+city+'MealIncluded')?.checked;const meals=['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(prefix+city+x)?.checked);const lines=[];if(name)lines.push('Hotel Name: '+name);if(room)lines.push('Room Type: '+room);if(inDate)lines.push('Check-in: '+inDate);if(outDate)lines.push('Check-out: '+outDate);if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));else lines.push('Meal Included: No');const legacy=document.getElementById(prefix+(city==='makkah'?'hotels':'madinahHotels'))?.value?.trim()||'';return lines.length>1||name||room||inDate||outDate||included?lines.join('\\n'):legacy}
-function accommodationSummary(city){const cap=city==='makkah'?'Makkah':'Madinah';const name=val(city+'HotelName'),room=val(city+'RoomType'),inDate=val(city+'Checkin'),outDate=val(city+'Checkout'),included=document.getElementById(city+'MealIncluded')?.checked;const meals=['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(city+x)?.checked);const lines=[];if(name)lines.push('Hotel Name: '+name);if(room)lines.push('Room Type: '+room);if(inDate)lines.push('Check-in: '+inDate);if(outDate)lines.push('Check-out: '+outDate);if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));else lines.push('Meal Included: No');const legacy=val(city==='makkah'?'hotels':'madinahHotels');return lines.length>1||name||room||inDate||outDate||included?lines.join('\\n'):legacy;}
+function accommodationSummaryFromPrefix(prefix,city){const name=document.getElementById(prefix+city+'HotelName')?.value?.trim()||'',room=document.getElementById(prefix+city+'RoomType')?.value?.trim()||'',inDate=document.getElementById(prefix+city+'Checkin')?.value||'',outDate=document.getElementById(prefix+city+'Checkout')?.value||'',included=!!document.getElementById(prefix+city+'MealIncluded')?.checked;const meals=['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(prefix+city+x)?.checked);const lines=[];if(name)lines.push('Hotel Name: '+name);if(room)lines.push('Room Type: '+room);if(inDate)lines.push('Check-in: '+inDate);if(outDate)lines.push('Check-out: '+outDate);if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));else lines.push('Meal Included: No');const legacy=document.getElementById(prefix+(city==='makkah'?'hotels':'madinahHotels'))?.value?.trim()||'';return lines.length>1||name||room||inDate||outDate||included?lines.join('\\n'):legacy}
+function accommodationSummary(city){const name=val(city+'HotelName'),room=val(city+'RoomType'),inDate=val(city+'Checkin'),outDate=val(city+'Checkout'),included=document.getElementById(city+'MealIncluded')?.checked;const meals=['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(city+x)?.checked);const lines=[];if(name)lines.push('Hotel Name: '+name);if(room)lines.push('Room Type: '+room);if(inDate)lines.push('Check-in: '+inDate);if(outDate)lines.push('Check-out: '+outDate);if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));else lines.push('Meal Included: No');const legacy=val(city==='makkah'?'hotels':'madinahHotels');return lines.length>1||name||room||inDate||outDate||included?lines.join('\\n'):legacy}
+function accommodationMarkup(city){
+ const values=[
+  ['Hotel Name',val(city+'HotelName')],
+  ['Room Type',val(city+'RoomType')],
+  ['Check-in',val(city+'Checkin')],
+  ['Check-out',val(city+'Checkout')],
+  ['Meal Included',document.getElementById(city+'MealIncluded')?.checked?'Yes'+(['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(city+x)?.checked).length?' — '+['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(city+x)?.checked).join(', '):''):'No']
+ ].filter(x=>x[1]);
+ const legacy=val(city==='makkah'?'hotels':'madinahHotels');
+ if(!values.some(x=>x[1]&&x[0]!=='Meal Included')&&legacy){
+  legacy.replace(/\\n/g,'\n').split('\n').forEach(line=>{const i=line.indexOf(':');if(i>0)values.push([line.slice(0,i).trim(),line.slice(i+1).trim()]);else if(line.trim())values.push(['Details',line.trim()]);});
+ }
+ if(!values.length)return '<div class="accommodation-empty">Accommodation details not provided</div>';
+ return '<div class="accommodation-detail-grid">'+values.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(id){const n=Number(val(id)||0);return '£'+n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function paymentInfo(x){
@@ -519,7 +538,7 @@ function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElem
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
-document.getElementById('p_hotels').textContent=accommodationSummary('makkah');document.getElementById('p_madinahHotels').textContent=accommodationSummary('madinah');
+document.getElementById('p_hotels').innerHTML=accommodationMarkup('makkah');document.getElementById('p_madinahHotels').innerHTML=accommodationMarkup('madinah');
 ['total','received','credit','balance'].forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=money(id)});
 document.getElementById('bizline').textContent=[val('bizphone'),val('bizemail')].filter(Boolean).join(' · ');
 document.getElementById('p_address').textContent=val('address');
