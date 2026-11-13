@@ -107,10 +107,10 @@ textarea, select, [contenteditable="true"] {
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
-<nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">5. Email Settings</button></nav>
+<nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSentbox" onclick="showTab('sentbox')">5. Sentbox <span id="sentboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">6. Email Settings</button></nav>
 <main>
 <section id="dashboard" class="tab active">
-<div class="dashboard-grid">
+<div class="dashboard-panel" id="mailHealthPanel" style="margin-bottom:16px"><div class="saved-head"><div><h2 style="margin-bottom:4px">Email system status</h2><div class="hint" id="mailHealthChecked">Checking SMTP sending and IMAP receiving…</div></div><button class="ghost" id="refreshMailHealthBtn" onclick="refreshMailHealth()">Check Again</button></div><div class="grid" style="margin-top:12px"><div class="metric"><div class="hint">SENDING (SMTP)</div><div class="metric-value" id="smtpHealthState">Checking…</div><div class="hint" id="smtpHealthDetail">Testing outgoing mail server</div></div><div class="metric"><div class="hint">RECEIVING (IMAP)</div><div class="metric-value" id="imapHealthState">Checking…</div><div class="hint" id="imapHealthDetail">Testing incoming mail server</div></div></div><div class="hint" id="mailSetupOverall" style="margin-top:10px">Verifying mailbox configuration and connectivity.</div></div><div class="dashboard-grid">
 <div class="metric"><div class="hint">TOTAL INVOICES</div><div class="metric-value" id="metricInvoices">0</div><div class="hint">All saved bookings</div></div>
 <div class="metric"><div class="hint">TOTAL INVOICED</div><div class="metric-value" id="metricRevenue">£0.00</div><div class="hint">Value of all invoices</div></div>
 <div class="metric"><div class="hint">PAYMENTS RECEIVED</div><div class="metric-value" id="metricReceived">£0.00</div><div class="hint">Received + credits</div></div>
@@ -150,6 +150,12 @@ Alfajar Travel UK</textarea></div>
 </div>
 </div>
 </section>
+<section id="sentbox" class="tab">
+<div class="panel" style="max-width:1200px;margin:0 auto">
+<div class="saved-head"><div><h2 style="margin-bottom:4px">Sentbox</h2><div class="hint">Successfully sent invoice emails from the configured Alfajar Travel mailbox.</div></div><button id="refreshSentboxBtn" onclick="refreshSentbox()">Refresh Sentbox</button></div>
+<div id="sentboxStatus" class="note" style="margin:12px 0">Loading sent email history…</div>
+<div id="sentboxList" class="saved-list"><div class="empty">No sent emails recorded yet.</div></div>
+</div></section>
 <section id="settings" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
 <h2>Email Settings</h2>
@@ -372,11 +378,41 @@ function prepareSavedInvoiceEmail(inv){
 }
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
 function printSaved(inv){loadInvoice(inv);printNow()}
-function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox()}
+function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function setMailHealthItem(stateId, detailId, item){
+ const state=document.getElementById(stateId),detail=document.getElementById(detailId);
+ const labels={connected:'Connected',error:'Failed','not-configured':'Not configured'};
+ state.textContent=labels[item?.state]||'Unknown'; state.style.color=item?.state==='connected'?'#18734a':item?.state==='error'?'#b33a32':'#9a7416';
+ detail.textContent=item?.message||'No status information available.';
+}
+async function refreshMailHealth(){
+ const b=document.getElementById('refreshMailHealthBtn'),overall=document.getElementById('mailSetupOverall'),checked=document.getElementById('mailHealthChecked');
+ if(b){b.disabled=true;b.textContent='Checking…'} overall.textContent='Testing actual SMTP and IMAP server connections…';
+ try{const r=await window.invoiceAPI.getEmailConnectionStatus();
+ setMailHealthItem('smtpHealthState','smtpHealthDetail',r.sending);setMailHealthItem('imapHealthState','imapHealthDetail',r.receiving);
+ const both=r.sending.state==='connected'&&r.receiving.state==='connected';
+ overall.textContent=both?'Mail setup is configured correctly. Sending and receiving are both active.':(!r.configured?'Mail setup is incomplete. Open Email Settings and save the mailbox details and password.':'Mail setup needs attention. Review the sending and receiving results above, then check Email Settings.');
+ checked.textContent='Last checked: '+new Date(r.checkedAt||Date.now()).toLocaleString();
+ }catch(e){overall.textContent='Could not check email status: '+e.message;setMailHealthItem('smtpHealthState','smtpHealthDetail',{state:'error',message:'Status check failed'});setMailHealthItem('imapHealthState','imapHealthDetail',{state:'error',message:'Status check failed'});}
+ finally{if(b){b.disabled=false;b.textContent='Check Again'}}
+}
+let sentEmails=[];
+function renderSentbox(){
+ const list=document.getElementById('sentboxList'),count=document.getElementById('sentboxCount');if(!list)return;
+ if(count)count.textContent=sentEmails.length?'('+sentEmails.length+')':'';
+ if(!sentEmails.length){list.innerHTML='<div class="empty">No sent invoice emails recorded yet.</div>';return}
+ list.innerHTML=sentEmails.map(m=>'<div class="invoice-row"><div><strong>'+esc(m.subject||'Alfajar Travel invoice')+'</strong><div class="meta">To: '+esc(m.to||'')+' · '+esc(m.sentAt?new Date(m.sentAt).toLocaleString():'')+'</div><div class="meta">Invoice: '+esc(m.invoiceNumber||'—')+' · Attachment: '+esc(m.attachment||'PDF')+' · <span class="status-pill paid">'+esc(m.status||'sent')+'</span></div></div></div>').join('');
+}
+async function refreshSentbox(){
+ const b=document.getElementById('refreshSentboxBtn'),status=document.getElementById('sentboxStatus');if(b){b.disabled=true;b.textContent='Loading…'}
+ try{sentEmails=await window.invoiceAPI.getSentEmails();renderSentbox();status.textContent=sentEmails.length+' sent email(s) recorded on this computer. This is the app’s local sent history.';}
+ catch(e){status.textContent='Could not load sentbox: '+e.message}
+ finally{if(b){b.disabled=false;b.textContent='Refresh Sentbox'}}
+}
 function renderDashboard(){
  const a=invoices(),metrics=a.map(x=>paymentInfo(x));
  const total=metrics.reduce((s,p)=>s+p.total,0),received=metrics.reduce((s,p)=>s+p.received+p.credit,0),outstanding=metrics.reduce((s,p)=>s+p.balance,0);
@@ -490,7 +526,7 @@ async function sendInvoiceEmail(){
 function printNow(){updatePreview();window.invoiceAPI.print()}
 async function savePDF(){updatePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
-newInvoice();renderInvoices();renderDashboard();loadEmailSettings();
+newInvoice();renderInvoices();renderDashboard();loadEmailSettings();refreshMailHealth();
 document.getElementById('invoiceSearch')?.addEventListener('input',renderInvoices);
 document.getElementById('invoiceStatusFilter')?.addEventListener('change',renderInvoices);
 if (window.invoiceAPI.onUpdateStatus) {
