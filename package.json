@@ -1,6 +1,6 @@
 {
   "name": "alfajar-travel-invoice-generator",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Offline desktop invoice generator for Alfajar Travel UK",
   "main": "main.js",
   "scripts": {
