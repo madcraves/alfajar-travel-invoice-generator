@@ -108,7 +108,7 @@ button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
 <div id="emailInvoiceContext" class="note" style="margin:12px 0">No saved invoice selected. Choose Send Email from a saved invoice, or enter an address manually.</div>
 <h3>Email invoice</h3>
 <div class="field"><label>Send invoice to lead passenger</label><input id="emailTo" type="email" placeholder="Lead passenger email address"></div>
-<div class="field"><label>Email subject</label><input id="emailSubject" value="Your Alfajar Travel invoice"></div>
+<div class="field"><label>Email subject</label><input id="emailSubject" value="Alfajar Travel invoice"></div>
 <div class="field"><label>Email message</label><textarea id="emailMessage">Dear Passenger,
 
 Please find your Alfajar Travel invoice attached.
@@ -286,7 +286,7 @@ function prepareSavedInvoiceEmail(inv){
  applyInvoiceToForm(d);
  const recipient=document.getElementById('emailTo');
  recipient.value=String(d.leadEmail||'').trim();
- document.getElementById('emailSubject').value='Your Alfajar Travel invoice '+String(d.inv||'');
+ document.getElementById('emailSubject').value='Alfajar Travel invoice '+String(d.inv||'');
  const context=document.getElementById('emailInvoiceContext');
  context.textContent='Selected invoice: '+String(d.inv||'')+' · Lead passenger: '+String(d.customer||'Not specified')+' · Recipient: '+(recipient.value||'No email address saved — enter one below');
  showTab('email');
@@ -367,7 +367,11 @@ async function sendInvoiceEmail(){
   // The main process creates the PDF from the currently visible page.
   // Show the invoice preview while generating the attachment, then return to Email.
   showTab('generator');
-  await window.invoiceAPI.sendInvoiceEmail({to,subject:val('emailSubject'),message:val('emailMessage'),invoiceNumber:val('inv')});
+  const emailSubject=val('emailSubject').trim();
+  const requiredSubjectPrefix='Alfajar Travel invoice';
+  const finalSubject=emailSubject.toLowerCase().startsWith(requiredSubjectPrefix.toLowerCase())?emailSubject:requiredSubjectPrefix+(emailSubject?' - '+emailSubject:'');
+  document.getElementById('emailSubject').value=finalSubject;
+  await window.invoiceAPI.sendInvoiceEmail({to,subject:finalSubject,message:val('emailMessage'),invoiceNumber:val('inv')});
   showTab(previousTab);
   alert('Invoice '+val('inv')+' emailed successfully to '+to+'.');
  }catch(e){showTab(previousTab);alert('Email could not be sent: '+e.message)}
