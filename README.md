@@ -54,3 +54,12 @@ The business address, ATOL/registration information and bank/payment details rem
 The editable Terms & Conditions are starter wording only, not approved legal advice. Alfajar Travel should review and approve them before use. Financial protection wording must accurately reflect the specific booking and any applicable ATOL protection. Never enter an ATOL number, registered address or bank details unless verified.
 
 Do not publish real customer invoices or passenger personal information in this public repository. Invoice records are stored locally on the computer running the application.
+
+## Invoice management features
+
+- Dashboard with invoice totals, outstanding balances, paid counts and recent invoices.
+- Search invoices by invoice number, passenger, booking reference, phone or email.
+- Filter saved invoices by paid, partially paid, unpaid and overdue status.
+- Payment due dates and automatic balance calculation from total, amount received and other credit.
+- Export and restore invoice backups in JSON format. Restore can merge with or replace existing records.
+- Invoice data remains stored locally on the computer; create regular backups and store them securely.
