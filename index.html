@@ -218,7 +218,7 @@ function paymentInfo(x){
  const balance=Math.max(0,total-received-credit);
  const due=x.dueDate?new Date(x.dueDate+'T23:59:59'):null;
  const overdue=balance>0.009&&due&&!Number.isNaN(due.getTime())&&due.getTime()<Date.now();
- return {total,received,credit,balance,status:balance<=0.009?'paid':overdue?'overdue':(received+credit)>0?'partial':'unpaid'};
+ return {total,received,credit,balance,status:total<=0?'unpaid':balance<=0.009?'paid':overdue?'overdue':(received+credit)>0?'partial':'unpaid'};
 }
 function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Unpaid',overdue:'Overdue'})[s]||'Unpaid'}
 function formData(){const d={};ids.forEach(id=>d[id]=val(id));d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
@@ -233,7 +233,7 @@ document.getElementById('p_bank').textContent=val('bank')?'Payment details: '+va
 document.getElementById('p_footercontact').textContent=[val('bizphone'),val('bizemail'), 'alfajartravel.co.uk'].filter(Boolean).join(' · ');
 }
 function invoices(){try{return JSON.parse(localStorage.getItem('alfajarInvoices')||'[]')}catch(e){return []}}
-function setInvoices(a){localStorage.setItem('alfajarInvoices',JSON.stringify(a));renderInvoices()}
+function setInvoices(a){localStorage.setItem('alfajarInvoices',JSON.stringify(a));renderInvoices();if(typeof renderDashboard==='function')renderDashboard()}
 function saveInvoice(){
 updatePreview();const data=formData();if(!data.inv){alert('Please enter an invoice number.');return}
 data.balance=paymentInfo(data).balance.toFixed(2);data.paymentStatus=paymentInfo(data).status;const a=invoices();const i=a.findIndex(x=>x.inv===data.inv);if(i>=0){data.createdAt=a[i].createdAt||data.createdAt;a[i]=data}else a.unshift(data);
