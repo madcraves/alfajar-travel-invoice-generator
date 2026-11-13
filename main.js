@@ -17,6 +17,7 @@ function readEmailSettings() {
         const saved = JSON.parse(fs.readFileSync(emailSettingsPath(), 'utf8'));
         const decrypt = (value) => value && safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(value, 'base64')) : '';
         const sharedPassword = decrypt(saved.passwordEncrypted) || decrypt(saved.imapPasswordEncrypted);
+        return { ...saved, password: sharedPassword, imapPassword: sharedPassword };
     } catch (_) { return {}; }
 }
 function writeEmailSettings(settings) {
