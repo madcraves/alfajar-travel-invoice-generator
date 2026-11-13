@@ -155,7 +155,7 @@ ipcMain.handle('check-for-updates-manual', async () => {
 ipcMain.handle('get-email-settings', async () => {
     const s = readEmailSettings();
     return {
-        fromEmail: s.fromEmail || '', fromName: s.fromName || 'Alfajar Travel UK', smtpHost: s.smtpHost || '', smtpPort: s.smtpPort || 587, smtpSecure: Boolean(s.smtpSecure), smtpUser: s.smtpUser || '', hasPassword: Boolean(s.password),
+        fromEmail: s.fromEmail || s.imapEmail || 'invoice@alfajartravel.co.uk', fromName: s.fromName || 'Alfajar Travel UK', smtpHost: s.smtpHost || 'smtp.hostinger.com', smtpPort: s.smtpPort || 465, smtpSecure: s.smtpSecure !== false, smtpUser: s.smtpUser || s.fromEmail || s.imapEmail || 'invoice@alfajartravel.co.uk', hasPassword: Boolean(s.password),
         imapEmail: s.imapEmail || 'invoice@alfajartravel.co.uk', imapHost: s.imapHost || 'imap.hostinger.com', imapPort: s.imapPort || 993, imapSecure: s.imapSecure !== false, imapUser: s.imapUser || s.imapEmail || 'invoice@alfajartravel.co.uk', hasImapPassword: Boolean(s.imapPassword)
     };
 });
