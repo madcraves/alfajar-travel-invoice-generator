@@ -224,7 +224,7 @@ textarea, select, [contenteditable="true"] {
 @media(max-width:760px){#generator .generator-layout{grid-template-columns:1fr}#generator .generator-side-column{grid-template-columns:1fr}#generator .generator-page-heading{align-items:flex-start;flex-direction:column}#generator .generator-bottom-actions{align-items:flex-start;flex-direction:column;width:100%}#generator .generator-bottom-actions .actions{width:100%}}
 @media(max-width:520px){#generator .generator-section{padding:16px 14px}#generator .generator-fields.two-col,#generator .payment-fields{grid-template-columns:1fr}#generator .generator-fields .field.full-width{grid-column:auto}#generator .generator-page-heading h2{font-size:23px}#generator .generator-page-actions{width:100%}#generator .generator-page-actions button{flex:1}#generator .generator-bottom-actions .actions button{flex:1;padding:10px 9px}}
 
-</style></head>
+\n/* Separate hotel accommodation cards and conditional meal choices */\n#generator .accommodation-card{border:1px solid #e0e9e5;border-radius:11px;padding:16px;background:#fbfdfc;margin:4px 0 16px}\n#generator .accommodation-card h4{margin:0 0 14px;color:#214b43;font-size:13px;font-weight:750}\n#generator .accommodation-card .generator-fields{gap:0 13px}\n#generator .accommodation-card .meal-toggle label{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:650;color:#31574e;cursor:pointer}\n#generator .accommodation-card input[type=checkbox]{width:16px;height:16px;min-height:16px;padding:0;accent-color:#1d6258;cursor:pointer}\n#generator .accommodation-card .meal-options{display:flex;flex-wrap:wrap;gap:18px;padding:12px 14px;background:#f0f6f2;border-radius:8px}\n#generator .accommodation-card .meal-options[hidden]{display:none!important}\n#generator .accommodation-card .meal-option{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#405c53;cursor:pointer}\n#invoiceEditFields .accommodation-card{border:1px solid #e0e9e5;border-radius:11px;padding:16px;background:#fbfdfc;margin:4px 0 16px}\n#invoiceEditFields .accommodation-card h4{margin:0 0 14px;color:#214b43;font-size:13px;font-weight:750}\n#invoiceEditFields .accommodation-card .meal-toggle label,#invoiceEditFields .accommodation-card .meal-option{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:650;cursor:pointer}\n#invoiceEditFields .accommodation-card input[type=checkbox]{width:16px;height:16px;min-height:16px;padding:0;accent-color:#1d6258;cursor:pointer}\n#invoiceEditFields .accommodation-card .meal-options{display:flex;flex-wrap:wrap;gap:18px;padding:12px 14px;background:#f0f6f2;border-radius:8px}\n#invoiceEditFields .accommodation-card .meal-options[hidden]{display:none!important}\n</style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
 <nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSentbox" onclick="showTab('sentbox')">5. Sentbox <span id="sentboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">6. Email Settings</button></nav>
@@ -339,8 +339,38 @@ Alfajar Travel UK</textarea></div>
         <div class="generator-fields">
           <div class="field"><label for="ticketInfo">Ticket Info</label><textarea id="ticketInfo" rows="3" placeholder="Ticket numbers, PNR, ticket issue date and other ticket information"></textarea></div>
           <div class="field"><label for="flights">Flight details</label><textarea id="flights" rows="4" placeholder="Airline, route, departure and return dates, baggage allowance and flight times"></textarea></div>
-          <div class="field"><label for="hotels">Makkah Accommodation</label><textarea id="hotels" rows="4" placeholder="Makkah hotel name, room type, meal plan, check-in and check-out dates"></textarea></div>
-          <div class="field"><label for="madinahHotels">Madinah Accommodation</label><textarea id="madinahHotels" rows="4" placeholder="Madinah hotel name, room type, meal plan, check-in and check-out dates"></textarea></div>
+          <section class="accommodation-card" data-city="makkah">
+            <h4>Makkah Accommodation</h4>
+            <div class="generator-fields two-col">
+              <div class="field"><label for="makkahHotelName">Hotel Name</label><input id="makkahHotelName" type="text" placeholder="Enter Makkah hotel name"></div>
+              <div class="field"><label for="makkahRoomType">Room Type</label><input id="makkahRoomType" type="text" placeholder="e.g. Double, Triple, Quad"></div>
+              <div class="field"><label for="makkahCheckin">Check-in Date</label><input id="makkahCheckin" type="date"></div>
+              <div class="field"><label for="makkahCheckout">Check-out Date</label><input id="makkahCheckout" type="date"></div>
+              <div class="field full-width meal-toggle"><label><input id="makkahMealIncluded" type="checkbox" onchange="toggleMealOptions(this)"> Meal included</label></div>
+              <div class="field full-width meal-options" data-meal-options hidden>
+                <label class="meal-option"><input id="makkahBreakfast" type="checkbox"> Breakfast</label>
+                <label class="meal-option"><input id="makkahLunch" type="checkbox"> Lunch</label>
+                <label class="meal-option"><input id="makkahDinner" type="checkbox"> Dinner</label>
+              </div>
+            </div>
+            <input id="hotels" type="hidden">
+          </section>
+          <section class="accommodation-card" data-city="madinah">
+            <h4>Madinah Accommodation</h4>
+            <div class="generator-fields two-col">
+              <div class="field"><label for="madinahHotelName">Hotel Name</label><input id="madinahHotelName" type="text" placeholder="Enter Madinah hotel name"></div>
+              <div class="field"><label for="madinahRoomType">Room Type</label><input id="madinahRoomType" type="text" placeholder="e.g. Double, Triple, Quad"></div>
+              <div class="field"><label for="madinahCheckin">Check-in Date</label><input id="madinahCheckin" type="date"></div>
+              <div class="field"><label for="madinahCheckout">Check-out Date</label><input id="madinahCheckout" type="date"></div>
+              <div class="field full-width meal-toggle"><label><input id="madinahMealIncluded" type="checkbox" onchange="toggleMealOptions(this)"> Meal included</label></div>
+              <div class="field full-width meal-options" data-meal-options hidden>
+                <label class="meal-option"><input id="madinahBreakfast" type="checkbox"> Breakfast</label>
+                <label class="meal-option"><input id="madinahLunch" type="checkbox"> Lunch</label>
+                <label class="meal-option"><input id="madinahDinner" type="checkbox"> Dinner</label>
+              </div>
+            </div>
+            <input id="madinahHotels" type="hidden">
+          </section>
           <div class="field"><label for="transport">Ground transport</label><textarea id="transport" rows="3" placeholder="Transfers, vehicle type, routes and travel dates"></textarea></div>
         </div>
       </section>
@@ -430,7 +460,7 @@ Alfajar Travel UK</textarea></div>
  </div>
 </div>
 <script>
-const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','ticketInfo','flights','hotels','madinahHotels','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bank'];
+const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bank'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
 3. Airline schedules, baggage allowances, hotel facilities and check-in/check-out times are controlled by the relevant suppliers and may change.
@@ -441,7 +471,7 @@ const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight d
 8. Any balance shown on this invoice must be paid by the agreed due date. Contact Alfajar Travel promptly if you believe any payment information is incorrect.
 9. Package inclusions and exclusions are only those expressly stated in the booking confirmation and this invoice.
 10. Financial protection applies only where legally applicable to the specific travel arrangements. Please ask Alfajar Travel to confirm the protection applicable to your booking and check any ATOL Certificate issued.`;
-function val(id){return (document.getElementById(id)?.value||'').trim()}
+function val(id){const el=document.getElementById(id);return (el?.value||'').trim()}\nfunction fieldValue(el){return el?.type==='checkbox'?(el.checked?'yes':'no'):String(el?.value??'').trim()}\nfunction setFieldValue(el,value){if(!el)return;if(el.type==='checkbox')el.checked=value===true||value==='yes'||value==='true'||value===1;else el.value=value??''}\nfunction toggleMealOptions(checkbox){const card=checkbox.closest('.accommodation-card');const options=card?.querySelector('[data-meal-options]');if(options)options.hidden=!checkbox.checked;}\nfunction accommodationSummaryFromPrefix(prefix,city){const name=document.getElementById(prefix+city+'HotelName')?.value?.trim()||'',room=document.getElementById(prefix+city+'RoomType')?.value?.trim()||'',inDate=document.getElementById(prefix+city+'Checkin')?.value||'',outDate=document.getElementById(prefix+city+'Checkout')?.value||'',included=!!document.getElementById(prefix+city+'MealIncluded')?.checked;const meals=['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(prefix+city+x)?.checked);const lines=[];if(name)lines.push('Hotel Name: '+name);if(room)lines.push('Room Type: '+room);if(inDate)lines.push('Check-in: '+inDate);if(outDate)lines.push('Check-out: '+outDate);if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));else lines.push('Meal Included: No');return lines.length>1||name||room||inDate||outDate||included?lines.join('\\n'):''}\nfunction accommodationSummary(city){const cap=city==='makkah'?'Makkah':'Madinah';const name=val(city+'HotelName'),room=val(city+'RoomType'),inDate=val(city+'Checkin'),outDate=val(city+'Checkout'),included=document.getElementById(city+'MealIncluded')?.checked;const meals=['Breakfast','Lunch','Dinner'].filter(x=>document.getElementById(city+x)?.checked);const lines=[];if(name)lines.push('Hotel Name: '+name);if(room)lines.push('Room Type: '+room);if(inDate)lines.push('Check-in: '+inDate);if(outDate)lines.push('Check-out: '+outDate);if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));else lines.push('Meal Included: No');const legacy=val(city==='makkah'?'hotels':'madinahHotels');return lines.length>1||name||room||inDate||outDate||included?lines.join('\\n'):legacy;}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(id){const n=Number(val(id)||0);return '£'+n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function paymentInfo(x){
@@ -452,10 +482,10 @@ function paymentInfo(x){
  return {total,received,credit,balance,status:total<=0?'unpaid':balance<=0.009?'paid':overdue?'overdue':(received+credit)>0?'partial':'unpaid'};
 }
 function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Unpaid',overdue:'Overdue'})[s]||'Unpaid'}
-function formData(){const d={};ids.forEach(id=>d[id]=val(id));d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
+function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
-ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
+ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});\ndocument.getElementById('p_hotels').textContent=accommodationSummary('makkah');document.getElementById('p_madinahHotels').textContent=accommodationSummary('madinah');
 ['total','received','credit','balance'].forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=money(id)});
 document.getElementById('bizline').textContent=[val('bizphone'),val('bizemail')].filter(Boolean).join(' · ');
 document.getElementById('p_address').textContent=val('address');
@@ -538,7 +568,7 @@ function editInvoice(inv){
  clone.querySelectorAll('[id]').forEach(el=>{el.id='edit_'+el.id});
  clone.querySelectorAll('[for]').forEach(el=>{el.htmlFor='edit_'+el.htmlFor});
  host.replaceChildren(clone);
- ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)field.value=d[id]??''});
+ ids.forEach(id=>{const field=document.getElementById('edit_'+id);setFieldValue(field,d[id])});\n['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById('edit_'+city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  const balance=paymentInfo(d).balance;
  const balanceField=document.getElementById('edit_balance');if(balanceField)balanceField.value=balance.toFixed(2);
  document.getElementById('invoiceEditTitle').textContent='Edit invoice '+String(d.inv||'');
@@ -556,7 +586,7 @@ function saveInvoiceChanges(){
  const all=invoices(),index=all.findIndex(x=>String(x.inv)===pendingEditInvoice);
  if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');closeInvoiceEdit();return}
  const original=all[index],data={...original};
- ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=String(field.value??'').trim()});
+ ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});\n['makkah','madinah'].forEach(city=>{const p=city==='makkah'?'':'Madinah ';data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
  if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
  const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
  if(duplicate>=0){alert('Another invoice already uses invoice number '+data.inv+'. Please enter a unique invoice number.');document.getElementById('edit_inv')?.focus();return}
@@ -572,7 +602,7 @@ function saveInvoiceChanges(){
  }catch(error){alert('Could not save invoice changes: '+error.message)}
 }
 function applyInvoiceToForm(d){
- ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=d[id]??''});
+ ids.forEach(id=>{setFieldValue(document.getElementById(id),d[id])});\n['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  updatePreview();
 }
 function loadInvoice(inv){const d=invoices().find(x=>String(x.inv)===String(inv));if(!d)return;applyInvoiceToForm(d);document.getElementById('emailTo').value=d.leadEmail||'';showTab('generator')}
@@ -591,7 +621,7 @@ function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cann
 function printSaved(inv){loadInvoice(inv);printNow()}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
-function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
+function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)setFieldValue(el,'')});\n['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function setMailHealthItem(stateId, detailId, item){
