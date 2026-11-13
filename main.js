@@ -34,6 +34,9 @@ function writeEmailSettings(settings) {
     return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted), inboxConfigured: Boolean(stored.imapEmail && stored.imapHost && stored.imapUser && passwordEncrypted) };
 }
 
+const sentboxPath = () => path.join(app.getPath('userData'), 'sentbox.json');
+function readSentbox() { try { const data = JSON.parse(fs.readFileSync(sentboxPath(), 'utf8')); return Array.isArray(data) ? data : []; } catch (_) { return []; } }
+function saveSentbox(items) { fs.writeFileSync(sentboxPath(), JSON.stringify(items.slice(0, 500), null, 2), { mode: 0o600 }); }
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
@@ -170,6 +173,18 @@ ipcMain.handle('save-email-settings', async (_event, settings) => {
     return writeEmailSettings(settings);
 });
 
+ipcMain.handle('get-email-connection-status', async () => {
+ const s = readEmailSettings();
+ const configured = Boolean(s.fromEmail && s.smtpHost && s.smtpUser && s.imapEmail && s.imapHost && s.imapUser && s.password);
+ const result = { configured, sending: { state: 'not-configured', message: 'Email settings or mailbox password are missing.' }, receiving: { state: 'not-configured', message: 'Email settings or mailbox password are missing.' }, checkedAt: new Date().toISOString() };
+ if (!configured) return result;
+ const transporter = nodemailer.createTransport({ host: s.smtpHost, port: Number(s.smtpPort || 465), secure: Boolean(s.smtpSecure), connectionTimeout: 12000, greetingTimeout: 12000, socketTimeout: 15000, auth: { user: s.smtpUser, pass: s.password } });
+ try { await transporter.verify(); result.sending = { state: 'connected', message: 'SMTP connection and authentication successful.' }; } catch (e) { result.sending = { state: 'error', message: e.message }; } finally { try { transporter.close(); } catch (_) {} }
+ const client = new ImapFlow({ host: s.imapHost, port: Number(s.imapPort || 993), secure: s.imapSecure !== false, auth: { user: s.imapUser, pass: s.imapPassword }, logger: false, socketTimeout: 15000 });
+ try { await client.connect(); result.receiving = { state: 'connected', message: 'IMAP connection and authentication successful.' }; } catch (e) { result.receiving = { state: 'error', message: e.message }; } finally { try { await client.logout(); } catch (_) {} }
+ result.checkedAt = new Date().toISOString(); return result;
+});
+ipcMain.handle('get-sent-emails', async () => readSentbox());
 ipcMain.handle('get-inbox-emails', async () => {
     const settings = readEmailSettings();
     if (!settings.imapEmail || !settings.imapHost || !settings.imapUser || !settings.imapPassword) throw new Error('Open Email Settings and enter the invoice@alfajartravel.co.uk mailbox password first.');
@@ -236,6 +251,9 @@ ipcMain.handle('send-invoice-email', async (event, payload) => {
         text: String(payload.message || 'Please find your invoice attached. Thank you for booking with Alfajar Travel.'),
         attachments: [{ filename: String(payload.invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-') + '.pdf', content: pdf, contentType: 'application/pdf' }]
     });
+    const sent = readSentbox();
+    sent.unshift({ id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 8), to: String(payload.to).trim(), from: settings.fromEmail, subject: String(payload.subject || 'Your Alfajar Travel invoice'), invoiceNumber: String(payload.invoiceNumber || ''), sentAt: new Date().toISOString(), status: 'sent', attachment: String(payload.invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-') + '.pdf' });
+    saveSentbox(sent);
     return { sent: true };
 });
 
