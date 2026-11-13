@@ -24,8 +24,8 @@ function writeEmailSettings(settings) {
     const passwordEncrypted = settings.password ? safeStorage.encryptString(settings.password).toString('base64') : '';
     const imapPasswordEncrypted = settings.imapPassword ? safeStorage.encryptString(settings.imapPassword).toString('base64') : '';
     const stored = {
-        fromEmail: String(settings.fromEmail || '').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(),
-        smtpHost: String(settings.smtpHost || '').trim(), smtpPort: Number(settings.smtpPort || 587), smtpSecure: Boolean(settings.smtpSecure), smtpUser: String(settings.smtpUser || '').trim(), passwordEncrypted,
+        fromEmail: String(settings.fromEmail || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(),
+        smtpHost: String(settings.smtpHost || 'smtp.hostinger.com').trim(), smtpPort: Number(settings.smtpPort || 465), smtpSecure: settings.smtpSecure !== false, smtpUser: String(settings.smtpUser || settings.fromEmail || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), passwordEncrypted,
         imapEmail: String(settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapHost: String(settings.imapHost || 'imap.hostinger.com').trim(),
         imapPort: Number(settings.imapPort || 993), imapSecure: settings.imapSecure !== false, imapUser: String(settings.imapUser || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapPasswordEncrypted
     };
