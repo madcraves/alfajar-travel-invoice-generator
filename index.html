@@ -158,8 +158,8 @@ Alfajar Travel UK</textarea></div>
 
 </div>
 <div class="field"><label><input id="smtpSecure" type="checkbox" checked style="width:auto;margin-right:7px">Use SSL/TLS (commonly port 465)</label></div>
-<div class="actions"><button class="secondary" onclick="saveEmailSettings()">Save Email Settings</button></div>
-<p class="hint">Your SMTP password is encrypted using the computer's secure credential storage. Hostinger SMTP is preconfigured: smtp.hostinger.com, port 465, SSL/TLS. The mailbox password entered below is used for both sending and receiving.</p>
+
+
 <h3>Incoming inbox settings</h3>
 <p class="hint">The same Hostinger mailbox sends invoices and receives signed invoices. Enter its password once below; it is securely stored and used for both SMTP and IMAP.</p>
 <div class="grid">
@@ -380,21 +380,19 @@ async function loadEmailSettings(){
   document.getElementById('smtpPort').value=s.smtpPort||465;
   document.getElementById('smtpSecure').checked=s.smtpSecure!==false;
   document.getElementById('smtpUser').value=s.smtpUser||s.fromEmail||s.imapEmail||'invoice@alfajartravel.co.uk';
-  document.getElementById('smtpPass').placeholder=s.hasPassword?'Saved securely — enter a new password to replace':'Enter password or app password';
   document.getElementById('imapEmail').value=s.imapEmail||'invoice@alfajartravel.co.uk';
   document.getElementById('imapUser').value=s.imapUser||s.imapEmail||'invoice@alfajartravel.co.uk';
   document.getElementById('imapHost').value=s.imapHost||'imap.hostinger.com';
   document.getElementById('imapPort').value=s.imapPort||993;
   document.getElementById('imapSecure').checked=s.imapSecure!==false;
-  document.getElementById('imapPass').placeholder=s.hasImapPassword?'Saved securely — enter a new password to replace':'Enter Hostinger mailbox password';
  }catch(e){console.error(e)}
 }
 async function saveEmailSettings(){
  try{
   const settings={fromEmail:val('emailFrom'),fromName:val('emailFromName'),smtpHost:val('smtpHost'),smtpPort:Number(val('smtpPort')||587),smtpSecure:document.getElementById('smtpSecure').checked,smtpUser:val('smtpUser'),password:val('mailboxPass'),imapEmail:val('imapEmail'),imapUser:val('imapUser'),imapHost:val('imapHost'),imapPort:Number(val('imapPort')||993),imapSecure:document.getElementById('imapSecure').checked,imapPassword:val('mailboxPass')};
   await window.invoiceAPI.saveEmailSettings(settings);
-  document.getElementById('smtpPass').value='';
-  document.getElementById('imapPass').value='';
+  document.getElementById('mailboxPass').value='';
+
   alert('Alfajar Travel email settings saved securely.');
   await loadEmailSettings();
  }catch(e){alert('Could not save email settings: '+e.message)}
