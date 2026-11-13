@@ -27,10 +27,10 @@ function writeEmailSettings(settings) {
         fromEmail: String(settings.fromEmail || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), fromName: String(settings.fromName || 'Alfajar Travel UK').trim(),
         smtpHost: String(settings.smtpHost || 'smtp.hostinger.com').trim(), smtpPort: Number(settings.smtpPort || 465), smtpSecure: settings.smtpSecure !== false, smtpUser: String(settings.smtpUser || settings.fromEmail || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), passwordEncrypted,
         imapEmail: String(settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapHost: String(settings.imapHost || 'imap.hostinger.com').trim(),
-        imapPort: Number(settings.imapPort || 993), imapSecure: settings.imapSecure !== false, imapUser: String(settings.imapUser || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), passwordEncrypted
+        imapPort: Number(settings.imapPort || 993), imapSecure: settings.imapSecure !== false, imapUser: String(settings.imapUser || settings.imapEmail || 'invoice@alfajartravel.co.uk').trim(), imapPasswordEncrypted: passwordEncrypted
     };
     fs.writeFileSync(emailSettingsPath(), JSON.stringify(stored, null, 2), { mode: 0o600 });
-    return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted), inboxConfigured: Boolean(stored.imapEmail && stored.imapHost && stored.imapUser && imapPasswordEncrypted) };
+    return { fromEmail: stored.fromEmail, configured: Boolean(stored.fromEmail && stored.smtpHost && stored.smtpUser && passwordEncrypted), inboxConfigured: Boolean(stored.imapEmail && stored.imapHost && stored.imapUser && passwordEncrypted) };
 }
 
 function createWindow() {
