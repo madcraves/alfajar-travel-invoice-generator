@@ -207,10 +207,10 @@ textarea, select, [contenteditable="true"] {
 </div></section><section id="email" class="tab">
 <div class="panel" style="max-width:900px;margin:0 auto">
 <h2>Email Invoice</h2>
-<p class="hint">Send the selected invoice PDF to its lead passenger. The recipient is loaded automatically from the saved invoice.</p>
+<p class="hint">Send the selected invoice PDF to its passenger. The recipient is loaded automatically from the saved invoice.</p>
 <div id="emailInvoiceContext" class="note" style="margin:12px 0">No saved invoice selected. Choose Send Email from a saved invoice, or enter an address manually.</div>
 <h3>Email invoice</h3>
-<div class="field"><label>Send invoice to lead passenger</label><input id="emailTo" type="email" placeholder="Lead passenger email address"></div>
+<div class="field"><label>Send invoice to passenger</label><input id="emailTo" type="email" placeholder="passenger email address"></div>
 <div class="field"><label>Email subject</label><input id="emailSubject" value="Alfajar Travel invoice"></div>
 <div class="field"><label>Email message</label><textarea id="emailMessage">Dear Passenger,
 
@@ -289,20 +289,22 @@ Alfajar Travel UK</textarea></div>
         </div>
       </section>
       <section class="generator-section">
-        <div class="generator-section-heading"><span class="section-number">02</span><div><h3>Passenger information</h3><p>Lead passenger and accompanying travellers</p></div></div>
+        <div class="generator-section-heading"><span class="section-number">02</span><div><h3>Passenger information</h3><p>Passenger contact details and accompanying travellers</p></div></div>
         <div class="generator-fields two-col">
-          <div class="field"><label for="customer">Lead passenger full name</label><input id="customer" placeholder="Enter passenger's full name"></div>
+          <div class="field"><label for="customer">Passenger full name</label><input id="customer" placeholder="Enter passenger's full name"></div>
           <div class="field"><label for="phone">Passenger phone number</label><input id="phone" type="tel" placeholder="+44..."></div>
-          <div class="field full-width"><label for="leadEmail">Lead passenger email address</label><input id="leadEmail" type="email" placeholder="leadpassenger@example.com"></div>
-          <div class="field full-width"><label for="passengers">Additional passengers</label><textarea id="passengers" rows="3" placeholder="Enter one passenger name per line"></textarea></div>
-          <div class="field full-width"><label for="visa">Visa / passport details</label><textarea id="visa" rows="3" placeholder="Enter relevant passenger visa or passport information"></textarea></div>
+          <div class="field full-width"><label for="leadEmail">Passenger email address</label><input id="leadEmail" type="email" placeholder="passenger@example.com"></div>
+          <div class="field full-width"><label for="passengers">Other passengers</label><textarea id="passengers" rows="3" placeholder="Enter one passenger name per line"></textarea></div>
+          <div class="field full-width"><label for="visa">Visa details</label><textarea id="visa" rows="3" placeholder="Enter passenger visa details"></textarea></div>
         </div>
       </section>
       <section class="generator-section">
         <div class="generator-section-heading"><span class="section-number">03</span><div><h3>Travel arrangements</h3><p>Flight, hotel and ground transport information</p></div></div>
         <div class="generator-fields">
+          <div class="field"><label for="ticketInfo">Ticket Info</label><textarea id="ticketInfo" rows="3" placeholder="Ticket numbers, PNR, ticket issue date and other ticket information"></textarea></div>
           <div class="field"><label for="flights">Flight details</label><textarea id="flights" rows="4" placeholder="Airline, route, departure and return dates, baggage allowance and flight times"></textarea></div>
-          <div class="field"><label for="hotels">Accommodation</label><textarea id="hotels" rows="4" placeholder="Hotel names, room type, meal plan, check-in and check-out dates"></textarea></div>
+          <div class="field"><label for="hotels">Makkah Accommodation</label><textarea id="hotels" rows="4" placeholder="Makkah hotel name, room type, meal plan, check-in and check-out dates"></textarea></div>
+          <div class="field"><label for="madinahHotels">Madinah Accommodation</label><textarea id="madinahHotels" rows="4" placeholder="Madinah hotel name, room type, meal plan, check-in and check-out dates"></textarea></div>
           <div class="field"><label for="transport">Ground transport</label><textarea id="transport" rows="3" placeholder="Transfers, vehicle type, routes and travel dates"></textarea></div>
         </div>
       </section>
@@ -346,13 +348,14 @@ Alfajar Travel UK</textarea></div>
 <div class="kv">
 <div class="cell"><b>Invoice number</b><span id="p_inv"></span></div><div class="cell"><b>Invoice date</b><span id="p_date"></span></div>
 <div class="cell"><b>Booking reference</b><span id="p_booking"></span></div><div class="cell"><b>Booking date</b><span id="p_bdate"></span></div><div class="cell"><b>Payment due date</b><span id="p_dueDate"></span></div>
-<div class="cell"><b>Lead passenger</b><span id="p_customer"></span></div><div class="cell"><b>Passenger phone</b><span id="p_phone"></span></div>
-<div class="cell"><b>Lead passenger email</b><span id="p_leadEmail"></span></div>
+<div class="cell"><b>Passenger</b><span id="p_customer"></span></div><div class="cell"><b>Passenger phone</b><span id="p_phone"></span></div>
+<div class="cell"><b>Passenger email</b><span id="p_leadEmail"></span></div>
 <div class="cell" style="grid-column:1/-1"><b>Additional passengers</b><span id="p_passengers" class="content"></span></div>
 </div>
-<h3>Passenger / visa details</h3><div class="content" id="p_visa"></div>
+<h3>Visa details</h3><div class="content" id="p_visa"></div>
+<h3>Ticket Info</h3><div class="content" id="p_ticketInfo"></div>
 <h3>Flight details</h3><div class="content" id="p_flights"></div>
-<h3>Accommodation</h3><div class="content" id="p_hotels"></div>
+<h3>Accommodation</h3><h4>Makkah</h4><div class="content" id="p_hotels"></div><h4>Madinah</h4><div class="content" id="p_madinahHotels"></div>
 <h3>Ground transportation</h3><div class="content" id="p_transport"></div>
 <h3>Payment summary</h3><div class="money">
 <div class="cell"><b>Total payable</b><span id="p_total"></span></div><div class="cell"><b>Amount received</b><span id="p_received"></span></div><div class="cell"><b>Other credit</b><span id="p_credit"></span></div><div class="cell"><b>Balance</b><span id="p_balance"></span></div></div><div class="small" style="margin-top:7px">Payment status: <strong id="p_paymentStatus"></strong></div>
@@ -384,7 +387,7 @@ Alfajar Travel UK</textarea></div>
  </div>
 </div>
 <script>
-const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','flights','hotels','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bank'];
+const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','ticketInfo','flights','hotels','madinahHotels','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bank'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
 3. Airline schedules, baggage allowances, hotel facilities and check-in/check-out times are controlled by the relevant suppliers and may change.
@@ -492,7 +495,7 @@ function prepareSavedInvoiceEmail(inv){
  recipient.value=String(d.leadEmail||'').trim();
  document.getElementById('emailSubject').value='Alfajar Travel invoice '+String(d.inv||'');
  const context=document.getElementById('emailInvoiceContext');
- context.textContent='Selected invoice: '+String(d.inv||'')+' · Lead passenger: '+String(d.customer||'Not specified')+' · Recipient: '+(recipient.value||'No email address saved — enter one below');
+ context.textContent='Selected invoice: '+String(d.inv||'')+' · passenger: '+String(d.customer||'Not specified')+' · Recipient: '+(recipient.value||'No email address saved — enter one below');
  showTab('email');
  if(!recipient.value)recipient.focus();
 }
@@ -625,7 +628,7 @@ async function downloadInboxAttachment(id){
 }
 async function sendInvoiceEmail(){
  const to=val('emailTo')||val('leadEmail');
- if(!to){alert('Enter the lead passenger email address first.');return;}
+ if(!to){alert('Enter the passenger email address first.');return;}
  if(!val('inv')){alert('Please select or enter an invoice first.');return;}
  const previousTab=document.querySelector('.tab.active')?.id||'email';
  try{
