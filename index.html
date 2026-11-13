@@ -116,6 +116,31 @@ textarea, select, [contenteditable="true"] {
 #dashboard button{font-weight:550}
 #dashboard .metric,#dashboard .dashboard-panel{box-shadow:0 2px 10px rgba(18,63,58,.035)}
 
+
+/* Focused invoice creation screen and dedicated preview dialog. */
+#generator .workspace{display:block;max-width:980px;margin:8px auto 0}
+#generator .form-panel{max-height:none;overflow:visible;padding:30px 34px;border-radius:16px}
+#generator .form-panel>h2{font-size:24px;font-weight:650;letter-spacing:-.035em;margin:0 0 24px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+#generator .form-panel h3{font-weight:650;letter-spacing:.065em}
+#generator .field label{font-weight:550}
+#generator .generator-actions{padding-top:8px;border-top:1px solid var(--line)}
+.invoice-preview-overlay{z-index:10000;align-items:flex-start;overflow:auto;padding:24px}
+.invoice-preview-dialog{width:min(100%,900px);margin:auto;background:#f5f7f6;border-radius:16px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.28)}
+.invoice-preview-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:2px 4px 16px}
+.invoice-preview-toolbar h2{margin:0 0 4px;font-size:19px;font-weight:650}
+.invoice-preview-toolbar .actions{margin:0}
+.invoice-preview-dialog .paper{max-width:800px;margin:0 auto;min-height:0}
+@media(max-width:650px){#generator .form-panel{padding:20px 16px}.invoice-preview-overlay{padding:8px}.invoice-preview-dialog{padding:10px}.invoice-preview-toolbar{align-items:flex-start;flex-direction:column}.invoice-preview-toolbar .actions{width:100%}}
+@media print{
+ body{background:#fff!important}
+ body>*{visibility:hidden!important}
+ #invoicePreviewModal{display:block!important;position:static!important;visibility:visible!important;background:#fff!important;padding:0!important;overflow:visible!important}
+ #invoicePreviewModal *{visibility:visible!important}
+ #invoicePreviewModal .invoice-preview-toolbar{display:none!important}
+ #invoicePreviewModal .invoice-preview-dialog{width:100%!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border:0!important}
+ #invoicePreviewModal #printArea{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;min-height:0!important}
+ @page{size:A4;margin:12mm}
+}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -226,11 +251,11 @@ Alfajar Travel UK</textarea></div>
 <div class="field"><label>Business address</label><textarea id="address" placeholder="Enter verified registered/business address"></textarea></div>
 <div class="grid"><div class="field"><label>Business phone</label><input id="bizphone" value="+44 7465 796629"></div><div class="field"><label>Business email</label><input id="bizemail" value="book@alfajartravel.co.uk"></div></div>
 <div class="grid"><div class="field"><label>ATOL / registration details</label><input id="atol" placeholder="Enter only verified details"></div><div class="field"><label>Bank details / payment instructions</label><input id="bank" placeholder="Enter approved payment details"></div></div>
-<div class="actions"><button onclick="updatePreview()">Update preview</button><button class="secondary" onclick="saveInvoice()">Save invoice</button><button onclick="printNow()">Print invoice</button><button class="secondary" onclick="savePDF()">Export PDF</button><button class="ghost" onclick="newInvoice()">New / Clear</button></div>
+<div class="actions generator-actions"><button onclick="showInvoicePreview()">Preview invoice</button><button class="secondary" onclick="saveInvoice()">Save invoice</button><button class="ghost" onclick="newInvoice()">New invoice</button></div>
 <p class="hint">Invoices are saved locally on this computer only. Customer records are not uploaded to Alfajar Travel's website or any cloud service.</p>
 </section>
-<div class="preview-wrap">
-<section class="paper" id="printArea">
+</div></section>
+<div id="invoicePreviewModal" class="modal-overlay invoice-preview-overlay" hidden onclick="if(event.target===this)closeInvoicePreview()"><div class="invoice-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="invoicePreviewTitle"><div class="invoice-preview-toolbar no-print"><div><h2 id="invoicePreviewTitle">Invoice Preview</h2><p class="hint">Review the invoice before printing or exporting it.</p></div><div class="actions"><button class="ghost" onclick="closeInvoicePreview()">Close</button><button class="secondary" onclick="savePDF()">Export PDF</button><button onclick="printNow()">Print invoice</button></div></div><section class="paper" id="printArea">
 <div class="paperHead"><img src="alfajar-logo.png" alt="Alfajar Travel"><div style="text-align:right"><h2>ALFAJAR TRAVEL UK</h2><div id="bizline" class="small"></div><div id="p_address" class="small"></div><div id="p_atol" class="small"></div></div></div>
 <div class="invoice-title">INVOICE</div>
 <div class="kv">
@@ -250,9 +275,7 @@ Alfajar Travel UK</textarea></div>
 <h3>Terms &amp; Conditions</h3><div class="terms" id="p_terms"></div>
 <div class="sig">Customer signature: ____________________________________ &nbsp;&nbsp; Date: __________________</div>
 <div class="small" style="margin-top:14px">Alfajar Travel UK · <span id="p_footercontact"></span><br><span id="p_bank"></span></div>
-</section>
-</div>
-</div></section>
+</section></div></div>
 <section id="saved" class="tab">
 <div class="saved-panel">
 <div class="saved-head"><div><h2 style="margin-bottom:4px">Generated Invoices</h2><div class="hint">Search by invoice number, passenger, booking reference, phone or email. Payment status updates from payments and due dates.</div></div><button onclick="showTab('generator');newInvoice()">Create new invoice</button></div>
@@ -535,8 +558,10 @@ async function sendInvoiceEmail(){
  }catch(e){showTab(previousTab);alert('Email could not be sent: '+e.message)}
 }
 
-function printNow(){updatePreview();window.invoiceAPI.print()}
-async function savePDF(){updatePreview();await window.invoiceAPI.savePDF()}
+function showInvoicePreview(){updatePreview();const modal=document.getElementById('invoicePreviewModal');modal.hidden=false;document.body.style.overflow='hidden';}
+function closeInvoicePreview(){const modal=document.getElementById('invoicePreviewModal');modal.hidden=true;document.body.style.overflow='';}
+function printNow(){updatePreview();showInvoicePreview();window.invoiceAPI.print()}
+async function savePDF(){updatePreview();showInvoicePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
 newInvoice();renderInvoices();renderDashboard();loadEmailSettings();refreshMailHealth();
 document.getElementById('invoiceSearch')?.addEventListener('input',renderInvoices);
