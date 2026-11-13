@@ -1,6 +1,6 @@
 {
   "name": "alfajar-travel-invoice-generator",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Offline desktop invoice generator for Alfajar Travel UK",
   "main": "main.js",
   "scripts": {
@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "electron-updater": "^6.6.2",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^6.10.1",
+    "imapflow": "^1.0.181",
+    "mailparser": "^3.7.4"
   },
   "devDependencies": {
     "electron": "^33.2.1",
