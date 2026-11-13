@@ -15,8 +15,8 @@ Offline Windows desktop invoice application built with Electron.
 ## Build the Windows installer using GitHub
 1. Open the repository's **Actions** tab.
 2. Run **Build Windows Installer** (or push a commit to the configured branch).
-3. Open the successful workflow run, scroll to **Artifacts**, and download `Alfajar-Travel-Windows-Installer`.
-4. Extract the artifact to get the Windows `.exe` installer.
+3. Open the repository's **Releases** page: https://github.com/madcraves/alfajar-travel-invoice-generator/releases.
+4. Open the latest release and download `Alfajar-Travel-Invoice-Generator-Setup-X.Y.Z.exe`. The release also includes `latest.yml` and a `.blockmap` file for automatic updates. You do not need to download anything from the Actions **Artifacts** section.
 
 ## Configure invoice email
 1. In **Alfajar Travel email account settings**, enter the sender email address, SMTP host, port, username and password/app password supplied by the email hosting provider.
@@ -32,7 +32,7 @@ The app does not guess SMTP server settings. Confirm the correct SMTP host, port
 3. Create and push a matching version tag, for example `v1.0.2`.
 4. The **Build Windows Installer** workflow publishes a GitHub Release with the installer and update metadata. Installed copies then detect it automatically.
 
-The tag version must match the `package.json` version. GitHub Releases must remain publicly accessible so installed copies can check and download updates without a GitHub login.
+The tag version must match the `package.json` version. Every successful push to the configured branch is published as a GitHub Release by the current workflow. GitHub Releases must remain publicly accessible so installed copies can check and download updates without a GitHub login.
 
 ## Build locally (optional)
 Install Node.js 20 LTS, then run:
