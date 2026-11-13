@@ -222,18 +222,46 @@ const a=invoices();const i=a.findIndex(x=>x.inv===data.inv);if(i>=0){data.create
 setInvoices(a);alert('Invoice '+data.inv+' saved on this computer.');
 }
 function renderInvoices(){
-const a=invoices();document.getElementById('savedCount').textContent=a.length?'('+a.length+')':'';
-const list=document.getElementById('invoiceList');
-if(!a.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use Invoice Generator to create and save your first invoice.</div>';return}
-list.innerHTML=a.slice().sort((x,y)=>(y.createdAt||'').localeCompare(x.createdAt||'')).map(x=>'<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: '+esc('£'+Number(x.total||0).toFixed(2))+'</div></div><div class="row-actions"><button onclick="loadInvoice(\''+esc(x.inv)+'\')">Open / Edit</button><button class="secondary" onclick="printSaved(\''+esc(x.inv)+'\')">Print / PDF</button><button class="danger" onclick="deleteInvoice(\''+esc(x.inv)+'\')">Delete</button></div></div>').join('');
+const all=invoices();document.getElementById('savedCount').textContent=all.length?'('+all.length+')':'';
+const list=document.getElementById('invoiceList');if(!list)return;
+if(!all.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use Invoice Generator to create and save your first invoice.</div>';return}
+const query=(document.getElementById('invoiceSearch')?.value||'').trim().toLowerCase();
+const filter=document.getElementById('invoiceStatusFilter')?.value||'all';
+const filtered=all.filter(x=>{const p=paymentInfo(x);const hay=[x.inv,x.customer,x.booking,x.phone,x.leadEmail].join(' ').toLowerCase();return (!query||hay.includes(query))&&(filter==='all'||p.status===filter)});
+if(!filtered.length){list.innerHTML='<div class="empty">No invoices match your search or payment filter.</div>';return}
+list.innerHTML=filtered.slice().sort((x,y)=>(y.createdAt||'').localeCompare(x.createdAt||'')).map(x=>{const p=paymentInfo(x);return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+'</div></div><div class="row-actions"><button onclick="loadInvoice(\''+esc(x.inv)+'\')">Open / Edit</button><button class="secondary" onclick="printSaved(\''+esc(x.inv)+'\')">Print / PDF</button><button class="danger" onclick="deleteInvoice(\''+esc(x.inv)+'\')">Delete</button></div></div>'}).join('');
 }
 function loadInvoice(inv){const d=invoices().find(x=>x.inv===inv);if(!d)return;ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=d[id]??''});document.getElementById('emailTo').value=d.leadEmail||'';updatePreview();showTab('generator')}
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
 function printSaved(inv){loadInvoice(inv);printNow()}
-function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');document.getElementById('tabEmail').classList.toggle('active',which==='email');document.getElementById('tabGenerator').classList.toggle('active',which==='generator');document.getElementById('tabSaved').classList.toggle('active',which==='saved');document.getElementById('tabSettings').classList.toggle('active',which==='settings');if(which==='saved')renderInvoices();if(which==='settings')loadEmailSettings()}
+function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');document.getElementById('tabDashboard').classList.toggle('active',which==='dashboard');document.getElementById('tabEmail').classList.toggle('active',which==='email');document.getElementById('tabGenerator').classList.toggle('active',which==='generator');document.getElementById('tabSaved').classList.toggle('active',which==='saved');document.getElementById('tabSettings').classList.toggle('active',which==='settings');if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
-function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
+function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
+function renderDashboard(){
+ const a=invoices(),total=a.reduce((s,x)=>s+paymentInfo(x).total,0),outstanding=a.reduce((s,x)=>s+paymentInfo(x).balance,0),paid=a.filter(x=>paymentInfo(x).status==='paid').length,partial=a.filter(x=>paymentInfo(x).status==='partial').length,unpaid=a.filter(x=>['unpaid','overdue'].includes(paymentInfo(x).status)).length;
+ document.getElementById('metricInvoices').textContent=a.length;
+ document.getElementById('metricRevenue').textContent='£'+total.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+ document.getElementById('metricOutstanding').textContent='£'+outstanding.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+ document.getElementById('metricPaid').textContent=paid;document.getElementById('metricPaidSub').textContent=partial+' partially paid · '+unpaid+' unpaid / overdue';
+ const recent=document.getElementById('dashboardRecent'),latest=a.slice().sort((x,y)=>(y.createdAt||'').localeCompare(x.createdAt||'')).slice(0,6);
+ recent.innerHTML=latest.length?latest.map(x=>{const p=paymentInfo(x);return '<div class="recent-row"><div><strong>'+esc(x.inv||'Invoice')+'</strong><div class="meta">'+esc(x.customer||'No passenger')+' · £'+p.total.toFixed(2)+'</div></div><span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span></div>'}).join(''):'<div class="empty">Your latest invoices will appear here.</div>';
+}
+function exportBackup(){
+ const payload={app:'Alfajar Travel Invoice Manager',schemaVersion:1,exportedAt:new Date().toISOString(),invoices:invoices()};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='alfajar-invoices-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+async function importBackup(event){
+ const file=event.target.files&&event.target.files[0];if(!file)return;
+ try{if(file.size>10*1024*1024)throw new Error('Backup file is larger than 10 MB.');
+ const data=JSON.parse(await file.text());if(!data||!Array.isArray(data.invoices)||data.invoices.some(x=>!x||typeof x!=='object'||!x.inv))throw new Error('This file is not a valid Alfajar invoice backup.');
+ const replace=confirm('Choose OK to REPLACE current invoices. Choose Cancel to MERGE this backup with current invoices.');
+ const merged=new Map((replace?[]:invoices()).map(x=>[String(x.inv),x]));data.invoices.forEach(x=>merged.set(String(x.inv),x));
+ const combined=Array.from(merged.values());if(!confirm('Restore '+data.invoices.length+' invoices?'))return;
+ setInvoices(combined);renderDashboard();alert('Backup restored successfully. '+combined.length+' invoices are now available.');
+ }catch(error){alert('Could not restore backup: '+error.message)}finally{event.target.value=''}
+}
 function checkForUpdates(){
  const b=document.getElementById('checkUpdatesBtn');
  b.disabled=true;b.textContent='Checking...';
@@ -276,7 +304,7 @@ async function sendInvoiceEmail(){
 function printNow(){updatePreview();window.invoiceAPI.print()}
 async function savePDF(){updatePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
-newInvoice();renderInvoices();loadEmailSettings();
+newInvoice();renderInvoices();renderDashboard();loadEmailSettings();
 if (window.invoiceAPI.onUpdateStatus) {
  window.invoiceAPI.onUpdateStatus(status => {
   const el=document.getElementById('updateStatus');
