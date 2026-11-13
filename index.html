@@ -104,6 +104,18 @@ textarea, select, [contenteditable="true"] {
 .modal-card{width:min(100%,440px);background:#fff;border:1px solid var(--line);border-radius:15px;padding:24px;box-shadow:0 22px 70px rgba(0,0,0,.22)}
 .modal-card h2{margin:0 0 12px}.payment-summary{background:#f1f6f3;border-radius:8px;padding:11px;font-size:12px;color:var(--green)}
 .payment-error{min-height:18px;color:#b42318;font-size:12px;margin:6px 0}
+
+/* Dashboard typography: restrained weights for a cleaner professional hierarchy. */
+#dashboard h2{font-size:17px;font-weight:600;letter-spacing:-.015em;color:#24443e}
+#dashboard .metric-value{font-size:23px;font-weight:600;letter-spacing:-.025em;color:#214b43}
+#dashboard .metric .hint{font-weight:400;letter-spacing:.035em}
+#dashboard .dashboard-panel>.saved-head h2{font-weight:600}
+#dashboard .dashboard-panel .hint{font-weight:400}
+#dashboard .recent-row strong{font-weight:600;color:#304b45}
+#dashboard .status-pill{font-weight:600}
+#dashboard button{font-weight:550}
+#dashboard .metric,#dashboard .dashboard-panel{box-shadow:0 2px 10px rgba(18,63,58,.035)}
+
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -544,14 +556,3 @@ document.getElementById('leadEmail').addEventListener('input',()=>{document.getE
 
 
 </script></body></html>
-
-/* Dashboard typography: restrained weights for a cleaner professional hierarchy. */
-#dashboard h2{font-size:17px;font-weight:600;letter-spacing:-.015em;color:#24443e}
-#dashboard .metric-value{font-size:23px;font-weight:600;letter-spacing:-.025em;color:#214b43}
-#dashboard .metric .hint{font-weight:400;letter-spacing:.035em}
-#dashboard .dashboard-panel>.saved-head h2{font-weight:600}
-#dashboard .dashboard-panel .hint{font-weight:400}
-#dashboard .recent-row strong{font-weight:600;color:#304b45}
-#dashboard .status-pill{font-weight:600}
-#dashboard button{font-weight:550}
-#dashboard .metric,#dashboard .dashboard-panel{box-shadow:0 2px 10px rgba(18,63,58,.035)}
