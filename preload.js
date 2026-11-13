@@ -9,5 +9,7 @@ contextBridge.exposeInMainWorld('invoiceAPI', {
     saveEmailSettings: (settings) => ipcRenderer.invoke('save-email-settings', settings),
     sendInvoiceEmail: (payload) => ipcRenderer.invoke('send-invoice-email', payload),
     getInboxEmails: () => ipcRenderer.invoke('get-inbox-emails'),
+    getEmailConnectionStatus: () => ipcRenderer.invoke('get-email-connection-status'),
+    getSentEmails: () => ipcRenderer.invoke('get-sent-emails'),
     saveInboxAttachment: (attachmentId) => ipcRenderer.invoke('save-inbox-attachment', attachmentId)
 });
