@@ -281,6 +281,24 @@ textarea, select, [contenteditable="true"] {
 }
 /* End one-line ticket information layout */
 
+
+/* Passenger information: align Add/Remove controls exactly with the input row. */
+.passenger-entry-row{align-items:end}
+.passenger-entry-row .passenger-add-button,
+.passenger-entry-row .passenger-remove-button{
+ display:flex;align-items:center;justify-content:center;
+ justify-self:stretch;align-self:end;width:100%;min-width:0;
+ height:42px;min-height:42px;margin:0;padding:0 12px;
+ box-sizing:border-box;white-space:nowrap;line-height:1.2
+}
+@media(max-width:900px){
+ .passenger-entry-row .passenger-add-button,
+ .passenger-entry-row .passenger-remove-button{grid-column:1/-1;width:100%;}
+}
+@media(max-width:650px){
+ .passenger-entry-row .passenger-add-button,
+ .passenger-entry-row .passenger-remove-button{grid-column:1;width:100%;}
+}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
