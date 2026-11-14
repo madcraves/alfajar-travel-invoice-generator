@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Notification, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Notification, safeStorage, shell } = require('electron');
 const nodemailer = require('nodemailer');
 const { ImapFlow } = require('imapflow');
 const { simpleParser } = require('mailparser');
@@ -304,6 +304,26 @@ ipcMain.handle('save-pdf', async (event) => {
         return { canceled: false, filePath };
     } catch (error) {
         throw new Error('PDF generation failed: ' + error.message);
+    }
+});
+
+// Generate the saved invoice PDF and open it in the default PDF viewer (never invoke printing).
+ipcMain.handle('view-pdf', async (event, invoiceNumber) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    try {
+        const pdfData = await win.webContents.printToPDF({
+            printBackground: true,
+            pageSize: 'A4',
+            margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
+        });
+        const safeName = String(invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-');
+        const filePath = path.join(app.getPath('temp'), safeName + '-' + Date.now() + '.pdf');
+        fs.writeFileSync(filePath, pdfData);
+        const openError = await shell.openPath(filePath);
+        if (openError) throw new Error(openError);
+        return { success: true, filePath };
+    } catch (error) {
+        throw new Error('Unable to open invoice PDF: ' + error.message);
     }
 });
 
