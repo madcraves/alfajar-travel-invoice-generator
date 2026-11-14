@@ -396,22 +396,6 @@ Alfajar Travel UK</textarea></div>
             </div>
             <input id="hotels" type="hidden">
           </section>
-      <div class="generator-section visa-details-section">
-        <div class="generator-section-heading"><span class="section-number">03</span><div><h3>Visa details</h3><p>Passenger nationality and visa information</p></div></div>
-        <div class="generator-fields">
-          <div class="field full-width"><label>Visa details</label>
-            <div class="visa-fields" id="visaPassengerList">
-              <div class="visa-passenger-row">
-                <div class="field"><label for="visaPassengerName">Passenger name</label><input id="visaPassengerName" data-visa-field="name" placeholder="Enter passenger name"></div>
-                <div class="field"><label for="visaNationality">Nationality</label><input id="visaNationality" data-visa-field="nationality" placeholder="e.g. British"></div>
-                <div class="field"><label for="visaType">Visa Type</label><input id="visaType" data-visa-field="type" placeholder="e.g. Umrah Visa"></div>
-                <button type="button" class="ghost visa-add-button" onclick="addVisaPassenger(this)">Add another passenger</button>
-              </div>
-              <textarea id="visa" hidden aria-hidden="true"></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
           <section class="accommodation-card" data-city="madinah">
             <h4>Madinah Accommodation</h4>
             <div class="generator-fields two-col">
@@ -431,6 +415,22 @@ Alfajar Travel UK</textarea></div>
           <div class="field"><label for="transport">Ground transport</label><textarea id="transport" rows="3" placeholder="Transfers, vehicle type, routes and travel dates"></textarea></div>
         </div>
       </section>
+      <div class="generator-section visa-details-section">
+        <div class="generator-section-heading"><span class="section-number">03</span><div><h3>Visa details</h3><p>Passenger nationality and visa information</p></div></div>
+        <div class="generator-fields">
+          <div class="field full-width"><label>Visa details</label>
+            <div class="visa-fields" id="visaPassengerList">
+              <div class="visa-passenger-row">
+                <div class="field"><label for="visaPassengerName">Passenger name</label><input id="visaPassengerName" data-visa-field="name" placeholder="Enter passenger name"></div>
+                <div class="field"><label for="visaNationality">Nationality</label><input id="visaNationality" data-visa-field="nationality" placeholder="e.g. British"></div>
+                <div class="field"><label for="visaType">Visa Type</label><input id="visaType" data-visa-field="type" placeholder="e.g. Umrah Visa"></div>
+                <button type="button" class="ghost visa-add-button" onclick="addVisaPassenger(this)">Add another passenger</button>
+              </div>
+              <textarea id="visa" hidden aria-hidden="true"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
       <section class="generator-section payment-section">
         <div class="generator-section-heading"><span class="section-number">04</span><div><h3>Payment summary</h3><p>Enter invoice amounts in GBP (£)</p></div></div>
         <div class="generator-fields payment-fields">
