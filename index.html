@@ -376,7 +376,16 @@ Alfajar Travel UK</textarea></div>
       <section class="generator-section">
         <div class="generator-section-heading"><span class="section-number">03</span><div><h3>Travel arrangements</h3><p>Flight, hotel and ground transport information</p></div></div>
         <div class="generator-fields">
-          <div class="field"><label for="ticketInfo">Ticket Info</label><textarea id="ticketInfo" rows="3" placeholder="Ticket numbers, PNR, ticket issue date and other ticket information"></textarea></div>
+          <div class="field full-width"><label>Ticket Info</label><div class="generator-fields two-col ticket-info-fields">
+            <div class="field"><label for="ticketPassengerName">Passenger Name</label><input id="ticketPassengerName" type="text" placeholder="Passenger name as shown on ticket"></div>
+            <div class="field"><label for="ticketAirlineName">Airline Name</label><input id="ticketAirlineName" type="text" placeholder="Airline name"></div>
+            <div class="field"><label for="ticketDepartureAirport">Departure Airport</label><input id="ticketDepartureAirport" type="text" placeholder="Airport name or code"></div>
+            <div class="field"><label for="ticketArrivalAirport">Arrival Airport</label><input id="ticketArrivalAirport" type="text" placeholder="Airport name or code"></div>
+            <div class="field"><label for="ticketDepartureDate">Departure Date</label><input id="ticketDepartureDate" type="date"></div>
+            <div class="field"><label for="ticketArrivalDate">Arrival Date</label><input id="ticketArrivalDate" type="date"></div>
+            <div class="field full-width"><label for="ticketBaggageAllowance">Baggage Allowance</label><input id="ticketBaggageAllowance" type="text" placeholder="e.g. 30 kg checked baggage + 7 kg hand carry"></div>
+          </div>
+          <textarea id="ticketInfo" hidden aria-hidden="true"></textarea></div>
           <div class="field"><label for="flights">Flight details</label><textarea id="flights" rows="4" placeholder="Airline, route, departure and return dates, baggage allowance and flight times"></textarea></div>
           <section class="accommodation-card" data-city="makkah">
             <h4>Makkah Accommodation</h4>
@@ -510,7 +519,7 @@ Alfajar Travel UK</textarea></div>
  </div>
 </div>
 <script>
-const ids=['inv','date','booking','bdate','dueDate','customer','dob','phone','leadEmail','passengers','visa','visaPassengerName','visaNationality','visaType','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
+const ids=['inv','date','booking','bdate','dueDate','customer','dob','phone','leadEmail','passengers','visa','visaPassengerName','visaNationality','visaType','ticketPassengerName','ticketAirlineName','ticketDepartureAirport','ticketArrivalAirport','ticketDepartureDate','ticketArrivalDate','ticketBaggageAllowance','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
 3. Airline schedules, baggage allowances, hotel facilities and check-in/check-out times are controlled by the relevant suppliers and may change.
@@ -671,6 +680,10 @@ function disclaimerMarkup(value){let html=esc(String(value||''));html=html.repla
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
+const ticketFields=[['Passenger Name',val('ticketPassengerName')],['Airline Name',val('ticketAirlineName')],['Departure Airport',val('ticketDepartureAirport')],['Arrival Airport',val('ticketArrivalAirport')],['Departure Date',val('ticketDepartureDate')],['Arrival Date',val('ticketArrivalDate')],['Baggage Allowance',val('ticketBaggageAllowance')]].filter(x=>x[1]);
+const legacyTicketInfo=val('ticketInfo');
+document.getElementById('p_ticketInfo').innerHTML=ticketFields.length?'<div class="accommodation-detail-grid">'+ticketFields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>'+(legacyTicketInfo?'<div class="content" style="margin-top:8px">'+esc(legacyTicketInfo)+'</div>':''):'';
+
 const passengerEntries=readPassengerEntries(document.querySelector('#generator .passenger-fields'));document.getElementById('p_passengers').textContent=passengerEntries.slice(1).map((x,i)=>'Passenger '+(i+2)+': '+[x.name,x.dob,x.phone,x.email].filter(Boolean).join(' · ')).join('\n');
 document.getElementById('p_visa').innerHTML=visaMarkup();
 document.getElementById('p_hotels').innerHTML=accommodationMarkup('makkah');document.getElementById('p_madinahHotels').innerHTML=accommodationMarkup('madinah');
