@@ -568,10 +568,41 @@ function readPassengerEntries(root){
   email:row.querySelector('[data-passenger-field="email"]')?.value.trim()||''
  })).filter(x=>x.name||x.dob||x.phone||x.email);
 }
+function syncPassengerNamesToRelatedFields(passengerRoot,entries){
+ if(!passengerRoot)return;
+ const isEdit=passengerRoot.closest('#invoiceEditFields')!==null;
+ const scope=isEdit?document.getElementById('invoiceEditFields'):document.getElementById('generator');
+ if(!scope)return;
+ const prefix=isEdit?'edit_':'';
+ const names=(entries||[]).map(x=>String(x.name||'').trim()).filter(Boolean);
+ if(!names.length)return;
+ const ticketName=scope.querySelector('#'+prefix+'ticketPassengerName');
+ if(ticketName)ticketName.value=names.join(', ');
+ const visaRoot=scope.querySelector('.visa-fields');
+ if(!visaRoot)return;
+ let rows=[...visaRoot.querySelectorAll('.visa-passenger-row')];
+ names.forEach((name,index)=>{
+  let row=rows[index];
+  if(!row){
+   row=document.createElement('div');
+   row.className='visa-passenger-row';
+   row.innerHTML='<div class="field"><label>Passenger name</label><input data-visa-field="name" placeholder="Enter passenger name"></div><div class="field"><label>Nationality</label><input data-visa-field="nationality" placeholder="e.g. British"></div><div class="field"><label>Visa Type</label><input data-visa-field="type" placeholder="e.g. Umrah Visa"></div><button type="button" class="ghost visa-remove-button" onclick="removeVisaPassenger(this)">Remove passenger</button>';
+   const hidden=visaRoot.querySelector('textarea');
+   visaRoot.insertBefore(row,hidden||null);
+   rows.push(row);
+  }
+  const nameField=row.querySelector('[data-visa-field="name"]');
+  if(nameField)nameField.value=name;
+ });
+ rows.slice(names.length).forEach(row=>row.remove());
+ const hidden=visaRoot.querySelector('textarea');
+ if(hidden)hidden.value=JSON.stringify(readVisaEntries(visaRoot));
+}
 function syncPassengerFields(element){
  const root=element?.matches?.('.passenger-fields')?element:element?.closest?.('.passenger-fields');if(!root)return;
  const entries=readPassengerEntries(root),first=entries[0]||{};
  const hidden=root.querySelector('textarea');if(hidden)hidden.value=JSON.stringify(entries);
+ syncPassengerNamesToRelatedFields(root,entries);
  const isEdit=root.closest('#invoiceEditFields')!==null,prefix=isEdit?'edit_':'';
  [['customer',first.name],['dob',first.dob],['phone',first.phone],['leadEmail',first.email]].forEach(([id,value])=>{
   const field=root.querySelector('#'+prefix+id);if(field&&field.value!==String(value||''))field.value=value||'';
@@ -619,6 +650,8 @@ function populatePassengerEntries(root,stored){
   const hidden=root.querySelector('textarea');root.insertBefore(row,hidden||null);
  });
  const hidden=root.querySelector('textarea');if(hidden)hidden.value=JSON.stringify(entries);
+ const passengerRoot=root.closest('#invoiceEditFields')?.querySelector('.passenger-fields')||document.querySelector('#generator .passenger-fields');
+ if(passengerRoot)syncPassengerNamesToRelatedFields(passengerRoot,readPassengerEntries(passengerRoot));
 }
 function readVisaEntries(root){
  if(!root)return [];
