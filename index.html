@@ -370,7 +370,7 @@ Alfajar Travel UK</textarea></div>
         <div class="generator-section-heading"><span class="section-number">03</span><div><h3>Travel arrangements</h3><p>Flight, hotel and ground transport information</p></div></div>
         <div class="generator-fields">
           <div class="field full-width"><label>Ticket Info</label>
-            <div class="ticket-info-fields" id="ticketPassengerList">
+            <div class="ticket-info-fields" id="ticketPassengerList" class="ticket-passenger-list">
               <div class="ticket-passenger-row" data-ticket-row>
                 <h4 class="ticket-passenger-heading">Passenger 1 Ticket Info</h4>
                 <div class="generator-fields two-col">
@@ -384,7 +384,7 @@ Alfajar Travel UK</textarea></div>
                 </div>
               </div>
             </div>
-            <textarea id="ticketInfo" hidden aria-hidden="true"></textarea></div>
+            <textarea id="ticketInfo" class="ticket-info-hidden" hidden aria-hidden="true"></textarea></div>
           <div class="field"><label for="flights">Flight details</label><textarea id="flights" rows="4" placeholder="Airline, route, departure and return dates, baggage allowance and flight times"></textarea></div>
           <section class="accommodation-card" data-city="makkah">
             <h4>Makkah Accommodation</h4>
@@ -585,6 +585,7 @@ function syncTicketFields(root,passengerEntries){
  if(!root)return;
  const names=(passengerEntries||[]).map(x=>String(x.name||'').trim()).filter(Boolean);
  let rows=[...root.querySelectorAll('[data-ticket-row]')];
+ if(!names.length)names.push('');
  names.forEach((name,index)=>{
   let row=rows[index];
   if(!row){
@@ -596,7 +597,7 @@ function syncTicketFields(root,passengerEntries){
   const nameField=row.querySelector('[data-ticket-field="name"]');if(nameField)nameField.value=name;
  });
  rows.slice(names.length).forEach(row=>row.remove());
- const hidden=root.parentElement?.querySelector('#ticketInfo');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
+ const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
 }
 function syncPassengerNamesToRelatedFields(passengerRoot,entries){
  if(!passengerRoot)return;
@@ -604,12 +605,12 @@ function syncPassengerNamesToRelatedFields(passengerRoot,entries){
  const scope=isEdit?document.getElementById('invoiceEditFields'):document.getElementById('generator');
  if(!scope)return;
  const names=(entries||[]).map(x=>String(x.name||'').trim()).filter(Boolean);
- const ticketRoot=scope.querySelector('#ticketPassengerList');
+ const ticketRoot=scope.querySelector('.ticket-passenger-list');
  if(ticketRoot)syncTicketFields(ticketRoot,entries);
  const visaRoot=scope.querySelector('.visa-fields');
  if(!visaRoot)return;
- if(!names.length){visaRoot.querySelectorAll('.visa-passenger-row').forEach(row=>row.remove());const h=visaRoot.querySelector('textarea');if(h)h.value='[]';return;}
  let rows=[...visaRoot.querySelectorAll('.visa-passenger-row')];
+ if(!names.length){rows.slice(1).forEach(row=>row.remove());const first=rows[0];if(first){first.querySelector('[data-visa-field="name"]').value='';}const h=visaRoot.querySelector('textarea');if(h)h.value='[]';return;}
  names.forEach((name,index)=>{
   let row=rows[index];
   if(!row){
@@ -619,7 +620,8 @@ function syncPassengerNamesToRelatedFields(passengerRoot,entries){
   }
   const nameField=row.querySelector('[data-visa-field="name"]');if(nameField)nameField.value=name;
  });
- rows.slice(names.length).forEach(row=>row.remove());
+ if(!names.length){rows.slice(1).forEach(row=>row.remove());}
+ else rows.slice(names.length).forEach(row=>row.remove());
  const hidden=visaRoot.querySelector('textarea');if(hidden)hidden.value=JSON.stringify(readVisaEntries(visaRoot));
 }
 function syncPassengerFields(element){
@@ -702,7 +704,7 @@ function populateTicketEntries(root,stored){
   ['airline','departureAirport','arrivalAirport','departureDate','arrivalDate','baggage'].forEach(key=>{const field=row.querySelector('[data-ticket-field="'+key+'"]');if(field)field.value=entry[key]||'';});
   const heading=row.querySelector('.ticket-passenger-heading');if(heading)heading.textContent='Passenger '+(index+1)+' Ticket Info';
  });
- const hidden=root.parentElement?.querySelector('#ticketInfo');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
+ const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
 }
 function readVisaEntries(root){
  if(!root)return [];
@@ -773,7 +775,7 @@ function disclaimerMarkup(value){let html=esc(String(value||''));html=html.repla
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
-const ticketEntries=readTicketEntries(document.querySelector('#generator #ticketPassengerList'));
+const ticketEntries=readTicketEntries(document.querySelector('#generator .ticket-passenger-list'));
 const legacyTicketInfo=val('ticketInfo');
 document.getElementById('p_ticketInfo').innerHTML=ticketEntries.map((entry,index)=>{
  const fields=[['Passenger Name',entry.name],['Airline Name',entry.airline],['Departure Airport',entry.departureAirport],['Arrival Airport',entry.arrivalAirport],['Departure Date',entry.departureDate],['Arrival Date',entry.arrivalDate],['Baggage Allowance',entry.baggage]].filter(x=>x[1]);
@@ -904,7 +906,7 @@ function editInvoice(inv){
  host.replaceChildren(clone);
  ids.forEach(id=>{const field=document.getElementById('edit_'+id);setFieldValue(field,d[id])});
  populatePassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields'),d.passengers);
- populateTicketEntries(document.querySelector('#invoiceEditFields #ticketPassengerList'),d.ticketInfo);
+ populateTicketEntries(document.querySelector('#invoiceEditFields .ticket-passenger-list'),d.ticketInfo);
  populateVisaEntries(document.querySelector('#invoiceEditFields .visa-fields'),d.visa);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById('edit_'+city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  const balance=paymentInfo(d).balance;
@@ -1122,6 +1124,8 @@ async function savePDF(){updatePreview();showInvoicePreview();await window.invoi
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
 document.querySelector('#generator .visa-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
 document.querySelector('#generator .passenger-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
+document.querySelector('#generator .ticket-passenger-list')?.addEventListener('input',event=>{if(event.target.matches('[data-ticket-field]')){const root=event.currentTarget;const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));updatePreview();}});
+document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-ticket-field]')){const root=event.target.closest('.ticket-passenger-list');const hidden=root?.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));}});
 document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target);if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
 newInvoice();renderInvoices();renderDashboard();loadEmailSettings();refreshMailHealth();
 document.getElementById('invoiceSearch')?.addEventListener('input',renderInvoices);
