@@ -35,7 +35,7 @@ button:hover{filter:brightness(1.08)}button.secondary{background:#e8dba8;color:#
 .empty{padding:35px;text-align:center;color:var(--muted);border:1px dashed #cbd8d2;border-radius:10px}
 @media(max-width:1050px){.workspace{grid-template-columns:1fr}.form-panel{max-height:none}.paper{min-height:0}}
 @media(max-width:600px){header{padding:10px 14px}header img{width:56px;height:52px}header h1{font-size:18px}nav{padding:12px 12px 0}main{padding:12px}.grid,.kv{grid-template-columns:1fr}.money{grid-template-columns:1fr 1fr}.paper{padding:18px}.invoice-row{align-items:flex-start;flex-direction:column}.paperHead img{width:82px}}
-@media print{body{background:#fff}.top,header,nav,.form-panel,.saved-panel,.no-print{display:none!important}main{padding:0;margin:0}.tab{display:none!important}#generator.tab{display:block!important}.workspace{display:block}.preview-wrap{display:block}.paper{border:0;box-shadow:none;border-radius:0;padding:0;min-height:0}.paperHead img{width:90px;height:70px}@page{size:A4;margin:12mm}}
+
 
 /* Professional interface refinement */
 :root{--green:#123f3a;--green2:#1d6258;--gold:#c5a34a;--ink:#1e302d;--muted:#667873;--line:#d9e4df;--bg:#eef3f1;--white:#fff;--shadow:0 12px 34px rgba(18,63,58,.07)}
@@ -83,7 +83,7 @@ button.danger{background:#fff2f0;color:#a43a31;border:1px solid #f4d8d4}
 #updateStatus{font-weight:650}
 @media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr)}.form-panel{max-height:none}}
 @media(max-width:600px){header.top{align-items:flex-start;gap:10px}header img{width:54px;height:50px}header h1{font-size:18px}.header-actions{flex-direction:column;align-items:flex-end}nav{gap:5px}nav button{padding:10px 11px;font-size:11px}main{padding:12px}.panel,.saved-panel{padding:16px}.paper{padding:20px 16px}.paperHead{gap:8px}.paperHead h2{font-size:15px}}
-@media print{body{background:#fff}.paper{border:0;box-shadow:none;border-radius:0;padding:0}.paperHead{border-bottom:2px solid #c5a34a}.cell{break-inside:avoid}.money{grid-template-columns:repeat(4,1fr)}}
+
 
 .dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric,.dashboard-panel{background:#fff;border:1px solid #dfe9e4;border-radius:13px;padding:18px}.metric-value{font-size:24px;font-weight:800;color:var(--green)}.dashboard-columns{display:grid;grid-template-columns:1.4fr .8fr;gap:14px}.filter-bar{display:grid;grid-template-columns:1fr 190px;gap:10px;margin:14px 0}.status-pill{border-radius:99px;padding:5px 9px;font-size:10px;font-weight:800;background:#edf3f1}.status-pill.paid{background:#e4f4eb;color:#17633f}.status-pill.partial{background:#fff3d9;color:#8b5a0a}.status-pill.unpaid{background:#fff0ed;color:#a33f32}.status-pill.overdue{background:#fbe4e4;color:#a11f2b}@media(max-width:800px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}.dashboard-columns{grid-template-columns:1fr}}@media(max-width:600px){.filter-bar{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:1fr 1fr}.metric{padding:14px}.metric-value{font-size:20px}}
 /* Explicitly keep invoice form fields focusable, selectable and editable. */
@@ -131,16 +131,7 @@ textarea, select, [contenteditable="true"] {
 .invoice-preview-toolbar .actions{margin:0}
 .invoice-preview-dialog .paper{max-width:800px;margin:0 auto;min-height:0}
 @media(max-width:650px){#generator .form-panel{padding:20px 16px}.invoice-preview-overlay{padding:8px}.invoice-preview-dialog{padding:10px}.invoice-preview-toolbar{align-items:flex-start;flex-direction:column}.invoice-preview-toolbar .actions{width:100%}}
-@media print{
- body{background:#fff!important}
- body>*{visibility:hidden!important}
- #invoicePreviewModal{display:block!important;position:static!important;visibility:visible!important;background:#fff!important;padding:0!important;overflow:visible!important}
- #invoicePreviewModal *{visibility:visible!important}
- #invoicePreviewModal .invoice-preview-toolbar{display:none!important}
- #invoicePreviewModal .invoice-preview-dialog{width:100%!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border:0!important}
- #invoicePreviewModal #printArea{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;min-height:0!important}
- @page{size:A4;margin:12mm}
-}
+
 
 /* Saved invoice edit popup */
 /* Reuse the same structured generator form styling inside the edit dialog. */
@@ -316,28 +307,55 @@ textarea, select, [contenteditable="true"] {
 }
 
 /* v1.0.56 PDF pagination correction.
-   Do not use visibility:hidden on the app shell: hidden elements retain their
-   layout height and create blank pages before the invoice. */
+   The preview modal is nested inside <main>; keep its parent visible and hide
+   only the other application sections while producing the invoice PDF. */
 @media print {
-  html, body { width:100%!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; overflow:visible!important; background:#fff!important; }
-  body > header, body > nav, body > main { display:none!important; }
-  body > #invoicePreviewModal { display:block!important; position:static!important; visibility:visible!important; width:100%!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; overflow:visible!important; background:#fff!important; }
+  html, body {
+    width:100%!important;height:auto!important;min-height:0!important;
+    margin:0!important;padding:0!important;overflow:visible!important;
+    background:#fff!important;
+  }
+  body > header, body > nav { display:none!important; }
+  body > main {
+    display:block!important;width:100%!important;max-width:none!important;
+    height:auto!important;min-height:0!important;margin:0!important;
+    padding:0!important;overflow:visible!important;
+  }
+  body > main > section { display:none!important; }
+  body > main > #invoicePreviewModal {
+    display:block!important;position:static!important;visibility:visible!important;
+    width:100%!important;height:auto!important;min-height:0!important;
+    margin:0!important;padding:0!important;overflow:visible!important;
+    background:#fff!important;
+  }
   #invoicePreviewModal[hidden] { display:block!important; }
-  #invoicePreviewModal .invoice-preview-dialog { display:block!important; width:100%!important; max-width:none!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; border:0!important; border-radius:0!important; box-shadow:none!important; overflow:visible!important; background:#fff!important; }
+  #invoicePreviewModal .invoice-preview-dialog {
+    display:block!important;width:100%!important;max-width:none!important;
+    height:auto!important;min-height:0!important;margin:0!important;padding:0!important;
+    border:0!important;border-radius:0!important;box-shadow:none!important;
+    overflow:visible!important;background:#fff!important;
+  }
   #invoicePreviewModal .invoice-preview-toolbar { display:none!important; }
-  #invoicePreviewModal #printArea { display:block!important; width:100%!important; max-width:none!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; border:0!important; border-radius:0!important; box-shadow:none!important; overflow:visible!important; color:#1e302d!important; font-size:9pt!important; line-height:1.35!important; }
-  #printArea h3 { margin:12px 0 6px!important; padding-bottom:5px!important; font-size:9pt!important; break-after:avoid-page!important; page-break-after:avoid!important; }
-  #printArea h4 { break-after:avoid-page!important; page-break-after:avoid!important; }
+  #invoicePreviewModal #printArea {
+    display:block!important;width:100%!important;max-width:none!important;
+    height:auto!important;min-height:0!important;margin:0!important;padding:0!important;
+    border:0!important;border-radius:0!important;box-shadow:none!important;
+    overflow:visible!important;color:#1e302d!important;font-size:9pt!important;
+    line-height:1.35!important;
+  }
+  #printArea h3 { margin:12px 0 6px!important;padding-bottom:5px!important;
+    font-size:9pt!important;break-after:avoid-page!important;page-break-after:avoid!important; }
+  #printArea h4 { break-after:avoid-page!important;page-break-after:avoid!important; }
   #printArea .paperHead { padding-bottom:10px!important; }
-  #printArea .invoice-title { margin:14px 0!important; font-size:18pt!important; }
-  #printArea .cell, #printArea .accommodation-detail-row, #printArea .accommodation-city-block,
-  #printArea .passenger-detail-list, #printArea .invoice-disclaimer, #printArea .sig,
-  #printArea .money, #printArea .note { break-inside:avoid!important; page-break-inside:avoid!important; }
-  #printArea .terms { orphans:3; widows:3; }
+  #printArea .invoice-title { margin:14px 0!important;font-size:18pt!important; }
+  #printArea .cell, #printArea .accommodation-detail-row,
+  #printArea .accommodation-city-block, #printArea .passenger-detail-list,
+  #printArea .invoice-disclaimer, #printArea .sig, #printArea .money,
+  #printArea .note { break-inside:avoid!important;page-break-inside:avoid!important; }
+  #printArea .terms { orphans:3;widows:3; }
   #printArea img { max-width:100%!important; }
-  @page { size:A4 portrait; margin:10mm; }
+  @page { size:A4 portrait;margin:10mm; }
 }
-
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
