@@ -246,6 +246,12 @@ textarea, select, [contenteditable="true"] {
 .accommodation-city-block{margin:10px 0 15px;break-inside:avoid}.accommodation-city-block h4{margin:0 0 8px;color:#214b43;font-size:12px;font-weight:750;letter-spacing:.025em}.accommodation-preview{border:1px solid #dfe9e4;border-radius:8px;overflow:hidden;background:#fff}.accommodation-detail-grid{display:grid;grid-template-columns:1fr 1fr}.accommodation-detail-row{display:grid;grid-template-columns:minmax(95px,.7fr) minmax(0,1.3fr);gap:9px;align-items:start;padding:9px 11px;border-bottom:1px solid #edf1ef;min-width:0}.accommodation-detail-row:nth-child(odd){background:#f8faf9}.accommodation-detail-row:nth-last-child(-n+2){border-bottom:0}.accommodation-detail-row span{font-size:10px;color:#667873;font-weight:650}.accommodation-detail-row strong{font-size:11px;color:#243b35;font-weight:650;overflow-wrap:anywhere}.accommodation-empty{padding:10px 12px;color:#87958f;font-size:10px;font-style:italic}@media(max-width:600px){.accommodation-detail-grid{grid-template-columns:1fr}.accommodation-detail-row:nth-last-child(2){border-bottom:1px solid #edf1ef}}
 .visa-fields{display:flex;flex-direction:column;gap:10px}.visa-passenger-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(150px,auto);gap:12px;align-items:end;padding:12px;border:1px solid var(--line,#dce5e1);border-radius:10px;background:#fff}.visa-passenger-row .field{min-width:0;margin:0}.visa-passenger-row input{width:100%;min-width:0;box-sizing:border-box}.visa-add-button,.visa-remove-button{justify-self:start;white-space:nowrap;align-self:end}.passenger-fields{display:flex;flex-direction:column;gap:10px}.passenger-entry-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(170px,auto);gap:12px;align-items:end;padding:12px;border:1px solid var(--line,#dce5e1);border-radius:10px;background:#fff}.passenger-entry-row .field{min-width:0;margin:0}.passenger-entry-row input{width:100%;min-width:0;box-sizing:border-box}.passenger-add-button,.passenger-remove-button{justify-self:start;white-space:nowrap;align-self:end}@media(max-width:900px){.passenger-entry-row{grid-template-columns:repeat(2,minmax(0,1fr))}.passenger-add-button,.passenger-remove-button{grid-column:1/-1}}@media(max-width:650px){.passenger-entry-row{grid-template-columns:1fr}.passenger-add-button,.passenger-remove-button{grid-column:1}}@media(max-width:650px){.visa-passenger-row{grid-template-columns:1fr 1fr}.visa-passenger-row .field:first-child{grid-column:1/-1}.visa-add-button,.visa-remove-button{grid-column:1/-1}}
 
+/* Ground transport structured fields */
+.ground-transport-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px}
+.ground-transport-fields>.field{min-width:0;margin:0}
+.ground-transport-fields input{width:100%;min-width:0;box-sizing:border-box}
+@media(max-width:760px){.ground-transport-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.ground-transport-fields{grid-template-columns:1fr}}
 /* Ensure hidden form fields never render as empty boxes when component CSS sets display. */
 [hidden]{display:none!important}
 
@@ -474,7 +480,17 @@ Alfajar Travel UK</textarea></div>
             </div>
             <input id="madinahHotels" type="hidden">
           </section>
-          <div class="field"><label for="transport">Ground transport</label><textarea id="transport" rows="3" placeholder="Transfers, vehicle type, routes and travel dates"></textarea></div>
+          <div class="field full-width ground-transport-section"><label>Ground transport</label>
+            <div class="ground-transport-fields" id="groundTransportFields">
+              <div class="field"><label>Provider</label><input data-transport-field="provider" type="text" placeholder="Transport provider"></div>
+              <div class="field"><label>Pickup Date</label><input data-transport-field="pickupDate" type="date"></div>
+              <div class="field"><label>Pickup Point</label><input data-transport-field="pickupPoint" type="text" placeholder="Pickup location"></div>
+              <div class="field"><label>Drop off Point</label><input data-transport-field="dropoffPoint" type="text" placeholder="Drop-off location"></div>
+              <div class="field"><label>Pickup Time</label><input data-transport-field="pickupTime" type="time"></div>
+              <div class="field"><label>Vehicle Type</label><input data-transport-field="vehicleType" type="text" placeholder="e.g. Sedan, SUV, Coaster"></div>
+            </div>
+            <textarea id="transport" hidden aria-hidden="true"></textarea>
+          </div>
         </div>
       </section>
       <div class="generator-section visa-details-section">
@@ -767,6 +783,21 @@ function populateTicketEntries(root,stored){
  });
  const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
 }
+function readGroundTransport(root){
+ if(!root)return {};
+ const get=key=>root.querySelector('[data-transport-field="'+key+'"]')?.value.trim()||'';
+ return {provider:get('provider'),pickupDate:get('pickupDate'),pickupPoint:get('pickupPoint'),dropoffPoint:get('dropoffPoint'),pickupTime:get('pickupTime'),vehicleType:get('vehicleType')};
+}
+function populateGroundTransport(root,value){
+ if(!root)return;
+ let data={};
+ try{data=typeof value==='string'?JSON.parse(value||'{}'):(value||{});}catch(_){data={legacy:value||''};}
+ ['provider','pickupDate','pickupPoint','dropoffPoint','pickupTime','vehicleType'].forEach(key=>{
+  const field=root.querySelector('[data-transport-field="'+key+'"]');if(field)field.value=data[key]||'';
+ });
+ const legacy=root.parentElement?.querySelector('textarea[id$="transport"]');
+ if(legacy)legacy.value=data.legacy||'';
+}
 function readVisaEntries(root){
  if(!root)return [];
  return Array.from(root.querySelectorAll('.visa-passenger-row')).map(row=>({
@@ -831,7 +862,7 @@ function paymentInfo(x){
  return {total,received,credit,balance,status:total<=0?'unpaid':balance<=0.009?'paid':overdue?'overdue':(received+credit)>0?'partial':'unpaid'};
 }
 function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Unpaid',overdue:'Overdue'})[s]||'Unpaid'}
-function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#generator .passenger-fields')));d.visa=JSON.stringify(readVisaEntries(document.querySelector('#generator .visa-fields')));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
+function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#generator .passenger-fields')));d.visa=JSON.stringify(readVisaEntries(document.querySelector('#generator .visa-fields')));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.transport=JSON.stringify(readGroundTransport(document.querySelector('#generator .ground-transport-fields')));d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
 function disclaimerMarkup(value){let html=esc(String(value||''));html=html.replace(/(\+44\s*7465\s*796629)/g,'<strong>$1</strong>');html=html.replace(/(book@alfajartravel\.co\.uk)/gi,'<strong>$1</strong>');return html;}
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
@@ -844,7 +875,10 @@ document.getElementById('p_ticketInfo').innerHTML=ticketEntries.map((entry,index
 }).join('')+(legacyTicketInfo&&!ticketEntries.length?'<div class="content" style="margin-top:8px">'+esc(legacyTicketInfo)+'</div>':'');
 
 const passengerEntries=readPassengerEntries(document.querySelector('#generator .passenger-fields'));document.getElementById('p_passengers').textContent=passengerEntries.slice(1).map((x,i)=>'Passenger '+(i+2)+': '+[x.name,x.dob,x.phone,x.email].filter(Boolean).join(' · ')).join('\n');
-document.getElementById('p_visa').innerHTML=visaMarkup();
+const groundTransport=readGroundTransport(document.querySelector('#generator .ground-transport-fields'));
+ const transportFields=[['Provider',groundTransport.provider],['Pickup Date',groundTransport.pickupDate],['Pickup Point',groundTransport.pickupPoint],['Drop off Point',groundTransport.dropoffPoint],['Pickup Time',groundTransport.pickupTime],['Vehicle Type',groundTransport.vehicleType]].filter(x=>x[1]);
+ document.getElementById('p_transport').innerHTML=transportFields.length?'<div class="accommodation-detail-grid">'+transportFields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>':(val('transport')&&!String(val('transport')).trim().startsWith('{')?esc(val('transport')):'');
+ document.getElementById('p_visa').innerHTML=visaMarkup();
 document.getElementById('p_hotels').innerHTML=accommodationMarkup('makkah');document.getElementById('p_madinahHotels').innerHTML=accommodationMarkup('madinah');
 ['total','received','credit','balance'].forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=money(id)});
 document.getElementById('bizline').textContent=[val('bizphone'),val('bizemail')].filter(Boolean).join(' · ');
@@ -969,6 +1003,7 @@ function editInvoice(inv){
  populatePassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields'),d.passengers);
  populateTicketEntries(document.querySelector('#invoiceEditFields .ticket-passenger-list'),d.ticketInfo);
  populateVisaEntries(document.querySelector('#invoiceEditFields .visa-fields'),d.visa);
+  populateGroundTransport(document.querySelector('#invoiceEditFields .ground-transport-fields'),d.transport);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById('edit_'+city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  const balance=paymentInfo(d).balance;
  const balanceField=document.getElementById('edit_balance');if(balanceField)balanceField.value=balance.toFixed(2);
@@ -990,6 +1025,7 @@ function saveInvoiceChanges(){
  ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});
  data.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields')));
  data.visa=JSON.stringify(readVisaEntries(document.querySelector('#invoiceEditFields .visa-fields')));
+  data.transport=JSON.stringify(readGroundTransport(document.querySelector('#invoiceEditFields .ground-transport-fields')));
 ['makkah','madinah'].forEach(city=>{const p=city==='makkah'?'':'Madinah ';data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
  if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
  const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
@@ -1010,6 +1046,7 @@ function applyInvoiceToForm(d){
  populatePassengerEntries(document.querySelector('#generator .passenger-fields'),d.passengers);
  populateTicketEntries(document.querySelector('#generator #ticketPassengerList'),d.ticketInfo);
  populateVisaEntries(document.querySelector('#generator .visa-fields'),d.visa);
+  populateGroundTransport(document.querySelector('#generator .ground-transport-fields'),d.transport);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  updatePreview();
 }
@@ -1033,6 +1070,7 @@ function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(e
  populatePassengerEntries(document.querySelector('#generator .passenger-fields'),'');
  populateTicketEntries(document.querySelector('#generator #ticketPassengerList'),val('ticketInfo'));
  populateVisaEntries(document.querySelector('#generator .visa-fields'),'');
+  populateGroundTransport(document.querySelector('#generator .ground-transport-fields'),'');
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('disclaimer').value="We only accept fund transfers to the designated bank account details listed below. If you are requested to transfer funds to any other account, please do not proceed, as we cannot be held liable for any loss or inconvenience. In such circumstances, we advise you to promptly contact us at +44 7465 796629 or via email at book@alfajartravel.co.uk.";document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
@@ -1185,6 +1223,8 @@ async function savePDF(){updatePreview();showInvoicePreview();await window.invoi
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
 document.querySelector('#generator .visa-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
 document.querySelector('#generator .passenger-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
+document.querySelector('#generator .ground-transport-fields')?.addEventListener('input',()=>{const hidden=document.getElementById('transport');if(hidden)hidden.value=JSON.stringify(readGroundTransport(document.querySelector('#generator .ground-transport-fields')));updatePreview();});
+document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-transport-field]')){const root=event.target.closest('.ground-transport-fields');const hidden=root?.parentElement?.querySelector('textarea[id$="transport"]');if(hidden)hidden.value=JSON.stringify(readGroundTransport(root));}});
 document.querySelector('#generator .ticket-passenger-list')?.addEventListener('input',event=>{if(event.target.matches('[data-ticket-field]')){const root=event.currentTarget;const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));updatePreview();}});
 document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-ticket-field]')){const root=event.target.closest('.ticket-passenger-list');const hidden=root?.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));}});
 document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target);if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
