@@ -314,6 +314,30 @@ textarea, select, [contenteditable="true"] {
  .passenger-entry-row .passenger-add-button,
  .passenger-entry-row .passenger-remove-button{grid-column:1;width:100%;}
 }
+
+/* PDF/print pagination fix: remove the application shell from the print layout.
+   visibility:hidden kept header/nav/main in document flow and generated blank pages. */
+@media print {
+  html, body { width:100%!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; background:#fff!important; overflow:visible!important; }
+  body > header, body > nav, body > main { display:none!important; }
+  body > #invoicePreviewModal { display:block!important; position:static!important; visibility:visible!important; width:100%!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; overflow:visible!important; background:#fff!important; }
+  #invoicePreviewModal[hidden] { display:block!important; }
+  #invoicePreviewModal .invoice-preview-dialog { display:block!important; width:100%!important; max-width:none!important; min-height:0!important; height:auto!important; margin:0!important; padding:0!important; border:0!important; border-radius:0!important; box-shadow:none!important; overflow:visible!important; background:#fff!important; }
+  #invoicePreviewModal .invoice-preview-toolbar { display:none!important; }
+  #invoicePreviewModal #printArea { display:block!important; width:100%!important; max-width:none!important; min-height:0!important; height:auto!important; margin:0!important; padding:0!important; border:0!important; border-radius:0!important; box-shadow:none!important; overflow:visible!important; color:#1e302d!important; font-size:9pt!important; line-height:1.35!important; }
+  #printArea h3 { margin:12px 0 6px!important; padding-bottom:5px!important; font-size:9pt!important; break-after:avoid-page!important; page-break-after:avoid!important; }
+  #printArea h4 { break-after:avoid-page!important; page-break-after:avoid!important; }
+  #printArea .paperHead { padding-bottom:10px!important; }
+  #printArea .invoice-title { margin:14px 0!important; font-size:18pt!important; }
+  #printArea .cell, #printArea .accommodation-detail-row, #printArea .accommodation-city-block,
+  #printArea .passenger-detail-list, #printArea .invoice-disclaimer, #printArea .sig,
+  #printArea .money, #printArea .note { break-inside:avoid!important; page-break-inside:avoid!important; }
+  #printArea .terms { orphans:3; widows:3; }
+  #printArea .terms li { break-inside:avoid-page!important; page-break-inside:avoid!important; }
+  #printArea img { max-width:100%!important; }
+  @page { size:A4 portrait; margin:10mm; }
+}
+
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -582,6 +606,7 @@ Alfajar Travel UK</textarea></div>
 <div class="sig">Customer signature: ____________________________________ &nbsp;&nbsp; Date: __________________</div>
 <div class="small" style="margin-top:14px">Alfajar Travel UK · <span id="p_footercontact"></span></div>
 </section></div></div>
+<div id="pdfViewerModal" class="modal-overlay" hidden onclick="if(event.target===this)closePdfViewer()"><div class="invoice-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="pdfViewerTitle" style="width:min(100%,1050px);height:min(92vh,900px);display:flex;flex-direction:column"><div class="invoice-preview-toolbar"><div><h2 id="pdfViewerTitle">Invoice PDF</h2><p class="hint">PDF preview</p></div><div class="actions"><button class="ghost" onclick="closePdfViewer()">Close</button></div></div><iframe id="pdfViewerFrame" title="Invoice PDF preview" style="width:100%;flex:1;min-height:0;border:1px solid #d9e4df;border-radius:8px;background:#fff"></iframe></div></div>
 <section id="saved" class="tab">
 <div class="saved-panel">
 <div class="saved-head"><div><h2 style="margin-bottom:4px">Generated Invoices</h2><div class="hint">Search by invoice number, passenger, booking reference, phone or email. Payment status updates from payments and due dates.</div></div><button onclick="showTab('generator');newInvoice()">Create new invoice</button></div>
@@ -1085,7 +1110,8 @@ function prepareSavedInvoiceEmail(inv){
  if(!recipient.value)recipient.focus();
 }
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
-async function viewSavedPDF(inv){loadInvoice(inv);updatePreview();try{const result=await window.invoiceAPI.viewPDF(inv);if(!result||!result.success)throw new Error(result?.error||'Could not open the PDF.');}catch(error){alert('Unable to open invoice PDF: '+(error.message||error));}}
+async function viewSavedPDF(inv){loadInvoice(inv);updatePreview();try{const result=await window.invoiceAPI.viewPDF(inv);if(!result||!result.success||!result.pdfBase64)throw new Error(result?.error||'Could not generate the PDF.');const frame=document.getElementById('pdfViewerFrame');frame.src='data:application/pdf;base64,'+result.pdfBase64;document.getElementById('pdfViewerModal').hidden=false;document.body.style.overflow='hidden';}catch(error){alert('Unable to open invoice PDF: '+(error.message||error));}}
+function closePdfViewer(){const modal=document.getElementById('pdfViewerModal');modal.hidden=true;document.getElementById('pdfViewerFrame').src='about:blank';document.body.style.overflow='';}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)setFieldValue(el,'')});
