@@ -244,7 +244,7 @@ textarea, select, [contenteditable="true"] {
 
 /* Clean, aligned accommodation details in the generated invoice */
 .accommodation-city-block{margin:10px 0 15px;break-inside:avoid}.accommodation-city-block h4{margin:0 0 8px;color:#214b43;font-size:12px;font-weight:750;letter-spacing:.025em}.accommodation-preview{border:1px solid #dfe9e4;border-radius:8px;overflow:hidden;background:#fff}.accommodation-detail-grid{display:grid;grid-template-columns:1fr 1fr}.accommodation-detail-row{display:grid;grid-template-columns:minmax(95px,.7fr) minmax(0,1.3fr);gap:9px;align-items:start;padding:9px 11px;border-bottom:1px solid #edf1ef;min-width:0}.accommodation-detail-row:nth-child(odd){background:#f8faf9}.accommodation-detail-row:nth-last-child(-n+2){border-bottom:0}.accommodation-detail-row span{font-size:10px;color:#667873;font-weight:650}.accommodation-detail-row strong{font-size:11px;color:#243b35;font-weight:650;overflow-wrap:anywhere}.accommodation-empty{padding:10px 12px;color:#87958f;font-size:10px;font-style:italic}@media(max-width:600px){.accommodation-detail-grid{grid-template-columns:1fr}.accommodation-detail-row:nth-last-child(2){border-bottom:1px solid #edf1ef}}
-.visa-fields{display:flex;flex-direction:column;gap:10px}.visa-passenger-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;padding:12px;border:1px solid var(--line,#dce5e1);border-radius:10px;background:#fff}.visa-passenger-row .field{min-width:0;margin:0}.visa-passenger-row input{width:100%;min-width:0;box-sizing:border-box}.visa-add-button{align-self:flex-start}.visa-remove-button{justify-self:start}@media(max-width:650px){.visa-passenger-row{grid-template-columns:1fr}}
+.visa-fields{display:flex;flex-direction:column;gap:10px}.visa-passenger-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(150px,auto);gap:12px;align-items:end;padding:12px;border:1px solid var(--line,#dce5e1);border-radius:10px;background:#fff}.visa-passenger-row .field{min-width:0;margin:0}.visa-passenger-row input{width:100%;min-width:0;box-sizing:border-box}.visa-add-button,.visa-remove-button{justify-self:start;white-space:nowrap;align-self:end}@media(max-width:650px){.visa-passenger-row{grid-template-columns:1fr 1fr}.visa-passenger-row .field:first-child{grid-column:1/-1}.visa-add-button,.visa-remove-button{grid-column:1/-1}}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -358,8 +358,8 @@ Alfajar Travel UK</textarea></div>
                 <div class="field"><label for="visaPassengerName">Passenger name</label><input id="visaPassengerName" data-visa-field="name" placeholder="Enter passenger name"></div>
                 <div class="field"><label for="visaNationality">Nationality</label><input id="visaNationality" data-visa-field="nationality" placeholder="e.g. British"></div>
                 <div class="field"><label for="visaType">Visa Type</label><input id="visaType" data-visa-field="type" placeholder="e.g. Umrah Visa"></div>
+                <button type="button" class="ghost visa-add-button" onclick="addVisaPassenger(this)">Add another passenger</button>
               </div>
-              <button type="button" class="ghost visa-add-button" onclick="addVisaPassenger(this)">Add another passenger</button>
               <textarea id="visa" hidden aria-hidden="true"></textarea>
             </div>
           </div>
@@ -553,7 +553,7 @@ function addVisaPassenger(button){
  const root=button?.closest('.visa-fields');if(!root)return;
  const row=document.createElement('div');row.className='visa-passenger-row';
  row.innerHTML='<div class="field"><label>Passenger name</label><input data-visa-field="name" placeholder="Enter passenger name"></div><div class="field"><label>Nationality</label><input data-visa-field="nationality" placeholder="e.g. British"></div><div class="field"><label>Visa Type</label><input data-visa-field="type" placeholder="e.g. Umrah Visa"></div><button type="button" class="ghost visa-remove-button" onclick="removeVisaPassenger(this)">Remove passenger</button>';
- root.insertBefore(row,button);row.querySelector('input')?.focus();syncVisaFields(root);
+ const hidden=root.querySelector('textarea');root.insertBefore(row,hidden||null);row.querySelector('input')?.focus();syncVisaFields(root);
 }
 function populateVisaEntries(root,stored){
  if(!root)return;
@@ -576,7 +576,7 @@ function populateVisaEntries(root,stored){
   const row=document.createElement('div');row.className='visa-passenger-row';
   row.innerHTML='<div class="field"><label>Passenger name</label><input data-visa-field="name" placeholder="Enter passenger name"></div><div class="field"><label>Nationality</label><input data-visa-field="nationality" placeholder="e.g. British"></div><div class="field"><label>Visa Type</label><input data-visa-field="type" placeholder="e.g. Umrah Visa"></div><button type="button" class="ghost visa-remove-button" onclick="removeVisaPassenger(this)">Remove passenger</button>';
   row.querySelector('[data-visa-field="name"]').value=entry.name||'';row.querySelector('[data-visa-field="nationality"]').value=entry.nationality||'';row.querySelector('[data-visa-field="type"]').value=entry.type||'';
-  root.insertBefore(row,button);
+  const hidden=root.querySelector('textarea');root.insertBefore(row,hidden||null);
  });
  const hidden=root.querySelector('textarea');if(hidden)hidden.value=JSON.stringify(entries);
 }
