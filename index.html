@@ -255,43 +255,46 @@ textarea, select, [contenteditable="true"] {
 /* Ensure hidden form fields never render as empty boxes when component CSS sets display. */
 [hidden]{display:none!important}
 
-/* Ticket information: keep all six travel fields on one compact row. */
-.ticket-info-fields{width:100%;overflow-x:hidden;padding-bottom:4px}
-.ticket-passenger-row{min-width:0;width:100%}
+/* Ticket information: responsive field grid, matching Ground Transport. */
+.ticket-info-fields{width:100%;min-width:0;padding-bottom:4px}
+.ticket-passenger-row{min-width:0;width:100%;padding:12px;border:1px solid #e1e9e5;border-radius:10px;background:#fff}
 .ticket-passenger-row .generator-fields.two-col{
  display:grid;
- grid-template-columns:minmax(0,.72fr) minmax(0,.72fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,.82fr) minmax(0,.82fr);
- gap:7px 6px;align-items:end;min-width:0;width:100%
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:10px 12px;align-items:end;min-width:0;width:100%
 }
 .ticket-passenger-row .generator-fields.two-col>.field{
- min-width:0;max-width:none;justify-self:stretch;width:100%;margin:0;overflow:hidden
+ min-width:0;max-width:none;justify-self:stretch;width:100%;margin:0
 }
 .ticket-passenger-row .generator-fields.two-col>.field label{
- white-space:nowrap;font-size:9px;margin-bottom:3px;letter-spacing:-.1px
+ display:block;white-space:normal;font-size:11px;margin-bottom:5px;letter-spacing:0
 }
 .ticket-passenger-row .generator-fields.two-col>.field input{
- display:block;width:100%;min-width:0;max-width:100%!important;box-sizing:border-box;
- height:32px;min-height:32px;padding:4px 5px;font-size:10px
+ display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+ height:40px;min-height:40px;padding:10px 11px;font-size:13px
 }
 .ticket-passenger-row .generator-fields.two-col>.field.full-width{
- grid-column:1/-1;width:100%;padding-top:1px
+ grid-column:1/-1;width:100%;padding-top:2px
 }
 .ticket-passenger-row .baggage-allowance-inputs{
- display:flex;align-items:center;justify-content:flex-start;flex-wrap:nowrap!important;
- gap:7px!important;white-space:nowrap
+ display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;
+ gap:8px 10px;white-space:normal
 }
 .ticket-passenger-row [data-ticket-field="baggageChecked"],
 .ticket-passenger-row [data-ticket-field="baggageHand"]{
- width:54px;height:32px;min-height:32px;max-width:54px!important;
- flex:0 0 54px;padding-left:5px;padding-right:5px
+ width:88px;height:40px;min-height:40px;max-width:88px;
+ flex:0 0 88px
 }
-.ticket-passenger-row .baggage-allowance-inputs span{font-size:10px}
-@media(max-width:600px){
- .ticket-passenger-row .generator-fields.two-col{
-  grid-template-columns:minmax(0,.72fr) minmax(0,.72fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,.82fr) minmax(0,.82fr)
- }
+.ticket-passenger-row .baggage-allowance-inputs span{font-size:11px}
+@media(max-width:760px){
+ .ticket-passenger-row .generator-fields.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-/* End compact one-line ticket information layout */
+@media(max-width:480px){
+ .ticket-passenger-row{padding:10px}
+ .ticket-passenger-row .generator-fields.two-col{grid-template-columns:minmax(0,1fr)}
+ .ticket-passenger-row .generator-fields.two-col>.field.full-width{grid-column:1}
+}
+/* End responsive Ticket Info layout */
 
 
 /* Passenger information: align Add/Remove controls exactly with the input row. */
