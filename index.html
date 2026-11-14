@@ -370,9 +370,9 @@ Alfajar Travel UK</textarea></div>
         <div class="generator-section-heading"><span class="section-number">03</span><div><h3>Travel arrangements</h3><p>Flight, hotel and ground transport information</p></div></div>
         <div class="generator-fields">
           <div class="field full-width"><label>Ticket Info</label>
-            <div class="ticket-info-fields" id="ticketPassengerList" class="ticket-passenger-list">
+            <div class="ticket-info-fields ticket-passenger-list" id="ticketPassengerList">
               <div class="ticket-passenger-row" data-ticket-row>
-                <h4 class="ticket-passenger-heading">Passenger 1 Ticket Info</h4>
+                <h4 class="ticket-passenger-heading">Ticket Info</h4>
                 <div class="generator-fields two-col">
                   <div class="field"><label>Passenger Name</label><input id="ticketPassengerName" data-ticket-field="name" type="text" placeholder="Passenger name as shown on ticket"></div>
                   <div class="field"><label>Airline Name</label><input id="ticketAirlineName" data-ticket-field="airline" type="text" placeholder="Airline name"></div>
@@ -583,7 +583,7 @@ function readTicketEntries(root){
 }
 function syncTicketFields(root,passengerEntries){
  if(!root)return;
- const names=(passengerEntries||[]).map(x=>String(x.name||'').trim()).filter(Boolean);
+ const names=(passengerEntries||[]).map(x=>String(x.name||'').trim());
  let rows=[...root.querySelectorAll('[data-ticket-row]')];
  if(!names.length)names.push('');
  names.forEach((name,index)=>{
@@ -593,7 +593,7 @@ function syncTicketFields(root,passengerEntries){
    row.innerHTML='<h4 class="ticket-passenger-heading"></h4><div class="generator-fields two-col"><div class="field"><label>Passenger Name</label><input data-ticket-field="name" type="text" placeholder="Passenger name as shown on ticket"></div><div class="field"><label>Airline Name</label><input data-ticket-field="airline" type="text" placeholder="Airline name"></div><div class="field"><label>Departure Airport</label><input data-ticket-field="departureAirport" type="text" placeholder="Airport name or code"></div><div class="field"><label>Arrival Airport</label><input data-ticket-field="arrivalAirport" type="text" placeholder="Airport name or code"></div><div class="field"><label>Departure Date</label><input data-ticket-field="departureDate" type="date"></div><div class="field"><label>Arrival Date</label><input data-ticket-field="arrivalDate" type="date"></div><div class="field full-width"><label>Baggage Allowance</label><input data-ticket-field="baggage" type="text" placeholder="e.g. 30 kg checked baggage + 7 kg hand carry"></div></div>';
    root.appendChild(row);rows.push(row);
   }
-  row.querySelector('.ticket-passenger-heading').textContent='Passenger '+(index+1)+' Ticket Info';
+  row.querySelector('.ticket-passenger-heading').textContent='Ticket Info';
   const nameField=row.querySelector('[data-ticket-field="name"]');if(nameField)nameField.value=name;
  });
  rows.slice(names.length).forEach(row=>row.remove());
@@ -702,7 +702,7 @@ function populateTicketEntries(root,stored){
   const nameField=row.querySelector('[data-ticket-field="name"]');
   if(nameField)nameField.value=names[index]||entry.name||'';
   ['airline','departureAirport','arrivalAirport','departureDate','arrivalDate','baggage'].forEach(key=>{const field=row.querySelector('[data-ticket-field="'+key+'"]');if(field)field.value=entry[key]||'';});
-  const heading=row.querySelector('.ticket-passenger-heading');if(heading)heading.textContent='Passenger '+(index+1)+' Ticket Info';
+  const heading=row.querySelector('.ticket-passenger-heading');if(heading)heading.textContent='Ticket Info';
  });
  const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
 }
@@ -779,7 +779,7 @@ const ticketEntries=readTicketEntries(document.querySelector('#generator .ticket
 const legacyTicketInfo=val('ticketInfo');
 document.getElementById('p_ticketInfo').innerHTML=ticketEntries.map((entry,index)=>{
  const fields=[['Passenger Name',entry.name],['Airline Name',entry.airline],['Departure Airport',entry.departureAirport],['Arrival Airport',entry.arrivalAirport],['Departure Date',entry.departureDate],['Arrival Date',entry.arrivalDate],['Baggage Allowance',entry.baggage]].filter(x=>x[1]);
- return fields.length?'<div class="accommodation-city-block"><h4>Passenger '+(index+1)+(entry.name?' — '+esc(entry.name):'')+'</h4><div class="accommodation-detail-grid">'+fields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div></div>':'';
+ return fields.length?'<div class="accommodation-city-block"><h4>'+(entry.name?esc(entry.name):'Ticket Info')+'</h4><div class="accommodation-detail-grid">'+fields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div></div>':'';
 }).join('')+(legacyTicketInfo&&!ticketEntries.length?'<div class="content" style="margin-top:8px">'+esc(legacyTicketInfo)+'</div>':'');
 
 const passengerEntries=readPassengerEntries(document.querySelector('#generator .passenger-fields'));document.getElementById('p_passengers').textContent=passengerEntries.slice(1).map((x,i)=>'Passenger '+(i+2)+': '+[x.name,x.dob,x.phone,x.email].filter(Boolean).join(' · ')).join('\n');
