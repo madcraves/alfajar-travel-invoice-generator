@@ -248,6 +248,27 @@ textarea, select, [contenteditable="true"] {
 
 /* Ensure hidden form fields never render as empty boxes when component CSS sets display. */
 [hidden]{display:none!important}
+
+/* Compact ticket-entry field sizing: keep the passenger name flexible while
+   sizing airline, airport and date controls to their actual content needs. */
+.ticket-passenger-row .generator-fields.two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px;align-items:start}
+.ticket-passenger-row .generator-fields.two-col>.field{min-width:0;max-width:100%;justify-self:start;width:100%}
+.ticket-passenger-row [data-ticket-field="airline"]{width:100%;max-width:110px!important}
+.ticket-passenger-row [data-ticket-field="departureAirport"],
+.ticket-passenger-row [data-ticket-field="arrivalAirport"]{width:100%;max-width:155px!important}
+.ticket-passenger-row [data-ticket-field="departureDate"],
+.ticket-passenger-row [data-ticket-field="arrivalDate"]{width:100%;max-width:165px!important}
+.ticket-passenger-row [data-ticket-field="baggageChecked"],
+.ticket-passenger-row [data-ticket-field="baggageHand"]{width:90px;max-width:90px!important}
+@media(max-width:600px){
+ .ticket-passenger-row .generator-fields.two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 10px}
+ .ticket-passenger-row [data-ticket-field="departureAirport"],
+ .ticket-passenger-row [data-ticket-field="arrivalAirport"]{max-width:100%!important}
+ .ticket-passenger-row [data-ticket-field="departureDate"],
+ .ticket-passenger-row [data-ticket-field="arrivalDate"]{max-width:100%!important}
+}
+/* End compact ticket-entry field sizing */
+
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
