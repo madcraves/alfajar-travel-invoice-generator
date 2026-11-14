@@ -671,6 +671,7 @@ function disclaimerMarkup(value){let html=esc(String(value||''));html=html.repla
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
+const passengerEntries=readPassengerEntries(document.querySelector('#generator .passenger-fields'));document.getElementById('p_passengers').textContent=passengerEntries.slice(1).map((x,i)=>'Passenger '+(i+2)+': '+[x.name,x.dob,x.phone,x.email].filter(Boolean).join(' · ')).join('\n');
 document.getElementById('p_visa').innerHTML=visaMarkup();
 document.getElementById('p_hotels').innerHTML=accommodationMarkup('makkah');document.getElementById('p_madinahHotels').innerHTML=accommodationMarkup('madinah');
 ['total','received','credit','balance'].forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=money(id)});
@@ -968,7 +969,8 @@ function printNow(){updatePreview();showInvoicePreview();window.invoiceAPI.print
 async function savePDF(){updatePreview();showInvoicePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
 document.querySelector('#generator .visa-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
-document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
+document.querySelector('#generator .passenger-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
+document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target);if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
 newInvoice();renderInvoices();renderDashboard();loadEmailSettings();refreshMailHealth();
 document.getElementById('invoiceSearch')?.addEventListener('input',renderInvoices);
 document.getElementById('invoiceStatusFilter')?.addEventListener('change',renderInvoices);
