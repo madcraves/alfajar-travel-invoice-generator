@@ -267,7 +267,7 @@ ipcMain.handle('send-invoice-email',async(event,payload)=>{
  if(!settings.fromEmail||!settings.smtpHost||!settings.smtpUser||!settings.password)throw new Error('Please configure and save your Alfajar Travel email settings first.');
  if(!settings.imapHost||!settings.imapUser||!settings.imapPassword)throw new Error('Configure the Hostinger IMAP mailbox to archive sent invoices.');
  if(!payload||!/^\S+@\S+\.\S+$/.test(String(payload.to||'')))throw new Error('Enter a valid lead passenger email address.');
- const win=BrowserWindow.fromWebContents(event.sender),pdf=await generateContinuousInvoicePdf(win);
+ const win=BrowserWindow.fromWebContents(event.sender),pdf=await win.webContents.printToPDF({printBackground:true,pageSize:'A4',margins:{top:0.35,bottom:0.35,left:0.35,right:0.35}});
  const recipient=String(payload.to).trim(),subject=String(payload.subject||'Your Alfajar Travel invoice'),message=String(payload.message||'Please find your invoice attached. Thank you for booking with Alfajar Travel.'),attachment=String(payload.invoiceNumber||'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi,'-')+'.pdf';
  const transporter=nodemailer.createTransport({host:settings.smtpHost,port:Number(settings.smtpPort||465),secure:Boolean(settings.smtpSecure),auth:{user:settings.smtpUser,pass:settings.password}});
  await transporter.sendMail({from:{name:settings.fromName||'Alfajar Travel UK',address:settings.fromEmail},to:recipient,subject,text:message,attachments:[{filename:attachment,content:pdf,contentType:'application/pdf'}]});
@@ -282,50 +282,6 @@ ipcMain.handle('send-invoice-email',async(event,payload)=>{
 });
 
 
-// Generate a continuous PDF page using the same printable width and typography as the PDF renderer.
-async function generateContinuousInvoicePdf(win) {
-    const measurement = await win.webContents.executeJavaScript(`(async () => {
-        const invoice = document.getElementById('printArea');
-        if (!invoice) throw new Error('Invoice preview is not available.');
-
-        // Screen preview dimensions differ from the A4 PDF layout and include a 900 px
-        // minimum height. Measure at the actual printable width instead.
-        const style = document.createElement('style');
-        style.setAttribute('data-pdf-measurement', 'true');
-        style.textContent = [
-            '@media screen {',
-            '#invoicePreviewModal .invoice-preview-dialog { display:block!important;width:190mm!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important; }',
-            '#invoicePreviewModal #printArea { display:block!important;width:190mm!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;overflow:visible!important;font-size:9pt!important;line-height:1.35!important; }',
-            '#printArea h3 { margin:12px 0 6px!important;padding-bottom:5px!important;font-size:9pt!important; }',
-            '#printArea .paperHead { padding-bottom:10px!important; }',
-            '#printArea .invoice-title { margin:14px 0!important;font-size:18pt!important; }',
-            '}'
-        ].join('\\n');
-        document.head.appendChild(style);
-        try {
-            if (document.fonts && document.fonts.ready) await document.fonts.ready;
-            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-            const rect = invoice.getBoundingClientRect();
-            return { height: Math.max(invoice.scrollHeight, invoice.offsetHeight, rect.height) };
-        } finally {
-            style.remove();
-            await new Promise(resolve => requestAnimationFrame(resolve));
-        }
-    })()`);
-
-    // CSS pixels at 96 DPI converted to microns. Keep original A4 width and margins.
-    // The 30 mm allowance covers page margins and renderer rounding; short invoices
-    // remain at least A4 height. The same helper is used for View, Export and Email PDFs.
-    const contentHeightMicrons = Math.ceil(measurement.height * 264.583333);
-    const heightMicrons = Math.min(5000000, Math.max(297000, contentHeightMicrons + 30000));
-
-    return win.webContents.printToPDF({
-        printBackground: true,
-        pageSize: { width: 210000, height: heightMicrons },
-        margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
-    });
-}
-
 // Save invoice as PDF
 ipcMain.handle('save-pdf', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -339,7 +295,7 @@ ipcMain.handle('save-pdf', async (event) => {
     if (canceled || !filePath) return { canceled: true };
 
     try {
-        const pdfData = await generateContinuousInvoicePdf(win);
+        const pdfData = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 } });
 
         fs.writeFileSync(filePath, pdfData);
         return { canceled: false, filePath };
@@ -353,7 +309,7 @@ ipcMain.handle('save-pdf', async (event) => {
  ipcMain.handle('view-pdf', async (event) => {
      const win = BrowserWindow.fromWebContents(event.sender);
      try {
-         const pdfData = await generateContinuousInvoicePdf(win);
+         const pdfData = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 } });
          return { success: true, pdfBase64: pdfData.toString('base64') };
      } catch (error) {
          throw new Error('Unable to generate invoice PDF: ' + error.message);
