@@ -294,7 +294,7 @@ async function generateContinuousInvoicePdf(win) {
     return win.webContents.printToPDF({
         printBackground: true,
         pageSize: { width: 210000, height: heightMicrons },
-        margins: { top: 0, bottom: 0, left: 0, right: 0 }
+        margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
     });
 }
 
