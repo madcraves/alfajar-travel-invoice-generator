@@ -351,7 +351,12 @@ Alfajar Travel UK</textarea></div>
           <div class="field"><label for="phone">Passenger phone number</label><input id="phone" type="tel" placeholder="+44..."></div>
           <div class="field full-width"><label for="leadEmail">Passenger email address</label><input id="leadEmail" type="email" placeholder="passenger@example.com"></div>
           <div class="field full-width"><label for="passengers">Other passengers</label><textarea id="passengers" rows="3" placeholder="Enter one passenger name per line"></textarea></div>
-          <div class="field full-width"><label for="visa">Visa details</label><textarea id="visa" rows="3" placeholder="Enter passenger visa details"></textarea></div>
+          <div class="field full-width"><label>Visa details</label><div class="generator-fields two-col visa-fields">
+            <div class="field"><label for="visaPassengerName">Passenger name</label><input id="visaPassengerName" placeholder="Enter passenger name"></div>
+            <div class="field"><label for="visaNationality">Nationality</label><input id="visaNationality" placeholder="e.g. British"></div>
+            <div class="field full-width"><label for="visaType">Visa Type</label><input id="visaType" placeholder="e.g. Umrah Visa"></div>
+            <textarea id="visa" hidden aria-hidden="true"></textarea>
+          </div></div>
         </div>
       </section>
       <section class="generator-section">
@@ -447,7 +452,7 @@ Alfajar Travel UK</textarea></div>
 <div class="cell"><b>Passenger email</b><span id="p_leadEmail"></span></div>
 <div class="cell" style="grid-column:1/-1"><b>Additional passengers</b><span id="p_passengers" class="content"></span></div>
 </div>
-<h3>Visa details</h3><div class="content" id="p_visa"></div>
+<h3>Visa details</h3><div id="p_visa" class="accommodation-preview"></div>
 <h3>Ticket Info</h3><div class="content" id="p_ticketInfo"></div>
 <h3>Flight details</h3><div class="content" id="p_flights"></div>
 <h3>Accommodation</h3><div class="accommodation-city-block"><h4>Makkah</h4><div id="p_hotels" class="accommodation-preview"></div></div><div class="accommodation-city-block"><h4>Madinah</h4><div id="p_madinahHotels" class="accommodation-preview"></div></div>
@@ -491,7 +496,7 @@ Alfajar Travel UK</textarea></div>
  </div>
 </div>
 <script>
-const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
+const ids=['inv','date','booking','bdate','dueDate','customer','phone','leadEmail','passengers','visa','visaPassengerName','visaNationality','visaType','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
 3. Airline schedules, baggage allowances, hotel facilities and check-in/check-out times are controlled by the relevant suppliers and may change.
@@ -522,6 +527,13 @@ function accommodationMarkup(city){
  if(!values.length)return '<div class="accommodation-empty">Accommodation details not provided</div>';
  return '<div class="accommodation-detail-grid">'+values.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';
 }
+function visaMarkup(){
+ const values=[['Passenger name',val('visaPassengerName')],['Nationality',val('visaNationality')],['Visa Type',val('visaType')]].filter(x=>x[1]);
+ if(values.length)return '<div class="accommodation-detail-grid">'+values.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';
+ const legacy=val('visa');
+ if(legacy){const rows=[];legacy.replace(/\\\\n/g,'\\n').split(/\\r?\\n/).forEach(line=>{const i=line.indexOf(':');if(i>0)rows.push([line.slice(0,i).trim(),line.slice(i+1).trim()]);else if(line.trim())rows.push(['Details',line.trim()]);});if(rows.length)return '<div class="accommodation-detail-grid">'+rows.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';return '<div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Details</span><strong>'+esc(legacy)+'</strong></div></div>';}
+ return '<div class="accommodation-empty">Visa details not provided</div>';
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(id){const n=Number(val(id)||0);return '£'+n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function paymentInfo(x){
@@ -537,6 +549,7 @@ function disclaimerMarkup(value){let html=esc(String(value||''));html=html.repla
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
+document.getElementById('p_visa').innerHTML=visaMarkup();
 document.getElementById('p_hotels').innerHTML=accommodationMarkup('makkah');document.getElementById('p_madinahHotels').innerHTML=accommodationMarkup('madinah');
 ['total','received','credit','balance'].forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=money(id)});
 document.getElementById('bizline').textContent=[val('bizphone'),val('bizemail')].filter(Boolean).join(' · ');
