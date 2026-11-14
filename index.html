@@ -307,13 +307,18 @@ textarea, select, [contenteditable="true"] {
 }
 
 @media print{
- body{background:#fff!important}
- body>*{visibility:hidden!important}
- #invoicePreviewModal{display:block!important;position:static!important;visibility:visible!important;background:#fff!important;padding:0!important;overflow:visible!important}
- #invoicePreviewModal *{visibility:visible!important}
+ /* Print only the invoice. display:none collapses hidden app sections so they
+    cannot leave blank pages before or after the invoice. */
+ html,body{background:#fff!important;width:100%!important;height:auto!important;overflow:visible!important}
+ body{margin:0!important;padding:0!important}
+ body>*{display:none!important;visibility:hidden!important}
+ body>main{display:block!important;visibility:visible!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;overflow:visible!important}
+ body>main>*{display:none!important;visibility:hidden!important}
+ body>main>#invoicePreviewModal{display:block!important;visibility:visible!important;position:static!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}
+ #invoicePreviewModal,#invoicePreviewModal *{visibility:visible!important}
  #invoicePreviewModal .invoice-preview-toolbar{display:none!important}
- #invoicePreviewModal .invoice-preview-dialog{width:100%!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border:0!important}
- #invoicePreviewModal #printArea{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;min-height:0!important}
+ #invoicePreviewModal .invoice-preview-dialog{display:block!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border:0!important;overflow:visible!important}
+ #invoicePreviewModal #printArea{display:block!important;max-width:none!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;overflow:visible!important}
  @page{size:A4;margin:12mm}
 }
 
