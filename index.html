@@ -681,6 +681,42 @@ document.getElementById('p_atol').textContent=val('atol');
 document.getElementById('p_bankDetails').textContent=[['Bank Name',val('bankName')],['Account Name',val('accountName')],['Account Number',val('accountNumber')],['Sort Code',val('sortCode')]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join('\n');
 document.getElementById('p_disclaimer').innerHTML=disclaimerMarkup(val('disclaimer'));
 document.getElementById('p_footercontact').textContent=[val('bizphone'),val('bizemail'), 'alfajartravel.co.uk'].filter(Boolean).join(' · ');
+hideEmptyInvoiceSections();
+}
+function hideEmptyInvoiceSections(){
+ const paper=document.getElementById('printArea');if(!paper)return;
+ const hideSection=(headingText,contentId)=>{
+  const heading=[...paper.querySelectorAll('h3')].find(x=>x.textContent.trim().toLowerCase()===headingText.toLowerCase());
+  const content=document.getElementById(contentId);
+  if(!heading||!content)return;
+  const empty=!(content.textContent||'').trim();
+  heading.hidden=empty;content.hidden=empty;
+ };
+ hideSection('Visa details','p_visa');
+ hideSection('Ticket Info','p_ticketInfo');
+ hideSection('Flight details','p_flights');
+ hideSection('Ground transportation','p_transport');
+ hideSection('Special note','p_note');
+ hideSection('Terms & Conditions','p_terms');
+ hideSection('Bank details','p_bankDetails');
+ const accommodationHeading=[...paper.querySelectorAll('h3')].find(x=>x.textContent.trim().toLowerCase()==='accommodation');
+ const makkah=paper.querySelector('#p_hotels')?.closest('.accommodation-city-block');
+ const madinah=paper.querySelector('#p_madinahHotels')?.closest('.accommodation-city-block');
+ const hasMakkah=!!(document.getElementById('p_hotels')?.textContent||'').trim();
+ const hasMadinah=!!(document.getElementById('p_madinahHotels')?.textContent||'').trim();
+ if(makkah)makkah.hidden=!hasMakkah;
+ if(madinah)madinah.hidden=!hasMadinah;
+ if(accommodationHeading)accommodationHeading.hidden=!(hasMakkah||hasMadinah);
+ const passengersCell=document.getElementById('p_passengers')?.closest('.cell');
+ if(passengersCell)passengersCell.hidden=!(document.getElementById('p_passengers')?.textContent||'').trim();
+ paper.querySelectorAll('.kv .cell').forEach(cell=>{
+  const value=cell.querySelector('span');
+  if(value)cell.hidden=!(value.textContent||'').trim();
+ });
+ const bankHeading=[...paper.querySelectorAll('h3')].find(x=>x.textContent.trim().toLowerCase()==='bank details');
+ if(bankHeading)bankHeading.hidden=!(document.getElementById('p_bankDetails')?.textContent||'').trim();
+ const disclaimer=document.querySelector('.invoice-disclaimer');
+ if(disclaimer)disclaimer.hidden=!(document.getElementById('p_disclaimer')?.textContent||'').trim();
 }
 function invoices(){try{return JSON.parse(localStorage.getItem('alfajarInvoices')||'[]')}catch(e){return []}}
 function setInvoices(a){try{localStorage.setItem('alfajarInvoices',JSON.stringify(a));renderInvoices();if(typeof renderDashboard==='function')renderDashboard()}catch(error){alert('Could not save invoice records. Your local storage may be full. Export a backup before removing old records.');throw error}}
