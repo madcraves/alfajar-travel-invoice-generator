@@ -249,19 +249,23 @@ textarea, select, [contenteditable="true"] {
 /* Ensure hidden form fields never render as empty boxes when component CSS sets display. */
 [hidden]{display:none!important}
 
-/* Ticket information: compact six-field first row with baggage on a separate row. */
-.ticket-info-fields{width:100%;overflow-x:auto;padding-bottom:4px}
-.ticket-passenger-row{min-width:830px}
+/* Ticket information: keep all six travel fields on one compact row. */
+.ticket-info-fields{width:100%;overflow-x:hidden;padding-bottom:4px}
+.ticket-passenger-row{min-width:0;width:100%}
 .ticket-passenger-row .generator-fields.two-col{
  display:grid;
- grid-template-columns:120px 120px 130px minmax(140px,1fr) minmax(140px,1fr) minmax(140px,1fr);
- gap:8px 8px;align-items:end;min-width:830px
+ grid-template-columns:minmax(0,.72fr) minmax(0,.72fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,.82fr) minmax(0,.82fr);
+ gap:7px 6px;align-items:end;min-width:0;width:100%
 }
-.ticket-passenger-row .generator-fields.two-col>.field{min-width:0;max-width:none;justify-self:stretch;width:100%;margin:0}
-.ticket-passenger-row .generator-fields.two-col>.field label{white-space:nowrap;font-size:10px;margin-bottom:4px}
+.ticket-passenger-row .generator-fields.two-col>.field{
+ min-width:0;max-width:none;justify-self:stretch;width:100%;margin:0;overflow:hidden
+}
+.ticket-passenger-row .generator-fields.two-col>.field label{
+ white-space:nowrap;font-size:9px;margin-bottom:3px;letter-spacing:-.1px
+}
 .ticket-passenger-row .generator-fields.two-col>.field input{
- width:100%;min-width:0;max-width:none!important;box-sizing:border-box;
- height:34px;min-height:34px;padding:5px 7px;font-size:11px
+ display:block;width:100%;min-width:0;max-width:100%!important;box-sizing:border-box;
+ height:32px;min-height:32px;padding:4px 5px;font-size:10px
 }
 .ticket-passenger-row .generator-fields.two-col>.field.full-width{
  grid-column:1/-1;width:100%;padding-top:1px
@@ -272,14 +276,13 @@ textarea, select, [contenteditable="true"] {
 }
 .ticket-passenger-row [data-ticket-field="baggageChecked"],
 .ticket-passenger-row [data-ticket-field="baggageHand"]{
- width:56px;height:34px;min-height:34px;max-width:56px!important;
- flex:0 0 56px;padding-left:6px;padding-right:6px
+ width:54px;height:32px;min-height:32px;max-width:54px!important;
+ flex:0 0 54px;padding-left:5px;padding-right:5px
 }
 .ticket-passenger-row .baggage-allowance-inputs span{font-size:10px}
 @media(max-width:600px){
- .ticket-passenger-row{min-width:830px}
  .ticket-passenger-row .generator-fields.two-col{
-  grid-template-columns:120px 120px 130px minmax(140px,1fr) minmax(140px,1fr) minmax(140px,1fr)
+  grid-template-columns:minmax(0,.72fr) minmax(0,.72fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,.82fr) minmax(0,.82fr)
  }
 }
 /* End compact one-line ticket information layout */
