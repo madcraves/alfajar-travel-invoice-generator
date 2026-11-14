@@ -307,10 +307,77 @@ ipcMain.handle('save-pdf', async (event) => {
     }
 });
 
-// Generate the saved invoice PDF and return it to the in-app PDF viewer.
+// Generate a PDF containing ONLY the generated invoice paper.
 ipcMain.handle('view-pdf', async (event, invoiceNumber) => {
     const win = BrowserWindow.fromWebContents(event.sender);
+    let printCssKey;
     try {
+        // Force-hide the complete application UI and expose only #printArea.
+        // This is injected directly before printToPDF so the Generator form,
+        // navigation, dialogs, and every other section cannot enter the PDF.
+        printCssKey = await win.webContents.insertCSS(`
+            @media print {
+                html, body { background: #fff !important; }
+                body > * { display: none !important; }
+                body > main {
+                    display: block !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                }
+                body > main > * { display: none !important; }
+                #invoicePreviewModal {
+                    display: block !important;
+                    position: static !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    background: #fff !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    overflow: visible !important;
+                    width: 100% !important;
+                    height: auto !important;
+                }
+                #invoicePreviewModal .invoice-preview-dialog {
+                    display: block !important;
+                    position: static !important;
+                    width: 100% !important;
+                    max-width: none !important;
+                    height: auto !important;
+                    min-height: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: 0 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    background: #fff !important;
+                }
+                #invoicePreviewModal .invoice-preview-dialog > * {
+                    display: none !important;
+                }
+                #invoicePreviewModal #printArea {
+                    display: block !important;
+                    visibility: visible !important;
+                    width: 100% !important;
+                    max-width: none !important;
+                    height: auto !important;
+                    min-height: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: 0 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    background: #fff !important;
+                }
+                #invoicePreviewModal #printArea * {
+                    visibility: visible !important;
+                }
+                #invoicePreviewModal #printArea .no-print {
+                    display: none !important;
+                }
+                @page { size: A4; margin: 12mm; }
+            }
+        `);
         const pdfData = await win.webContents.printToPDF({
             printBackground: true,
             pageSize: 'A4',
@@ -321,6 +388,10 @@ ipcMain.handle('view-pdf', async (event, invoiceNumber) => {
         return { success: true, invoiceNumber: String(invoiceNumber || ''), pdfBase64: pdfData.toString('base64') };
     } catch (error) {
         throw new Error('Unable to generate invoice PDF: ' + error.message);
+    } finally {
+        if (printCssKey) {
+            try { await win.webContents.removeInsertedCSS(printCssKey); } catch (_) {}
+        }
     }
 });
 
