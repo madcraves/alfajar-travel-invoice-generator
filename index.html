@@ -372,7 +372,6 @@ Alfajar Travel UK</textarea></div>
           <div class="field full-width"><label>Ticket Info</label>
             <div class="ticket-info-fields ticket-passenger-list" id="ticketPassengerList">
               <div class="ticket-passenger-row" data-ticket-row>
-                <h4 class="ticket-passenger-heading">Ticket Info</h4>
                 <div class="generator-fields two-col">
                   <div class="field"><label>Passenger Name</label><input id="ticketPassengerName" data-ticket-field="name" type="text" placeholder="Passenger name as shown on ticket"></div>
                   <div class="field"><label>Airline Name</label><input id="ticketAirlineName" data-ticket-field="airline" type="text" placeholder="Airline name"></div>
@@ -380,7 +379,7 @@ Alfajar Travel UK</textarea></div>
                   <div class="field"><label>Arrival Airport</label><input id="ticketArrivalAirport" data-ticket-field="arrivalAirport" type="text" placeholder="Airport name or code"></div>
                   <div class="field"><label>Departure Date</label><input id="ticketDepartureDate" data-ticket-field="departureDate" type="date"></div>
                   <div class="field"><label>Arrival Date</label><input id="ticketArrivalDate" data-ticket-field="arrivalDate" type="date"></div>
-                  <div class="field full-width"><label>Baggage Allowance</label><input id="ticketBaggageAllowance" data-ticket-field="baggage" type="text" placeholder="e.g. 30 kg checked baggage + 7 kg hand carry"></div>
+                  <div class="field full-width"><label>Baggage Allowance</label><div class="baggage-allowance-inputs" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><input id="ticketBaggageChecked" data-ticket-field="baggageChecked" type="number" min="0" step="1" value="30" aria-label="Checked baggage kilograms" style="max-width:90px"><span>kg checked baggage +</span><input id="ticketBaggageHand" data-ticket-field="baggageHand" type="number" min="0" step="1" value="7" aria-label="Hand carry kilograms" style="max-width:90px"><span>kg hand carry</span></div></div>
                 </div>
               </div>
             </div>
@@ -578,7 +577,7 @@ function readTicketEntries(root){
  if(!root)return [];
  return [...root.querySelectorAll('[data-ticket-row]')].map(row=>{
   const get=key=>row.querySelector('[data-ticket-field="'+key+'"]')?.value.trim()||'';
-  return {name:get('name'),airline:get('airline'),departureAirport:get('departureAirport'),arrivalAirport:get('arrivalAirport'),departureDate:get('departureDate'),arrivalDate:get('arrivalDate'),baggage:get('baggage')};
+  return {name:get('name'),airline:get('airline'),departureAirport:get('departureAirport'),arrivalAirport:get('arrivalAirport'),departureDate:get('departureDate'),arrivalDate:get('arrivalDate'),baggageChecked:get('baggageChecked')||'30',baggageHand:get('baggageHand')||'7',baggage:(get('baggageChecked')||'30')+' kg checked baggage + '+(get('baggageHand')||'7')+' kg hand carry'};
  });
 }
 function syncTicketFields(root,passengerEntries){
@@ -590,10 +589,9 @@ function syncTicketFields(root,passengerEntries){
   let row=rows[index];
   if(!row){
    row=document.createElement('div');row.className='ticket-passenger-row';row.setAttribute('data-ticket-row','');
-   row.innerHTML='<h4 class="ticket-passenger-heading"></h4><div class="generator-fields two-col"><div class="field"><label>Passenger Name</label><input data-ticket-field="name" type="text" placeholder="Passenger name as shown on ticket"></div><div class="field"><label>Airline Name</label><input data-ticket-field="airline" type="text" placeholder="Airline name"></div><div class="field"><label>Departure Airport</label><input data-ticket-field="departureAirport" type="text" placeholder="Airport name or code"></div><div class="field"><label>Arrival Airport</label><input data-ticket-field="arrivalAirport" type="text" placeholder="Airport name or code"></div><div class="field"><label>Departure Date</label><input data-ticket-field="departureDate" type="date"></div><div class="field"><label>Arrival Date</label><input data-ticket-field="arrivalDate" type="date"></div><div class="field full-width"><label>Baggage Allowance</label><input data-ticket-field="baggage" type="text" placeholder="e.g. 30 kg checked baggage + 7 kg hand carry"></div></div>';
+   row.innerHTML='<div class="generator-fields two-col"><div class="field"><label>Passenger Name</label><input data-ticket-field="name" type="text" placeholder="Passenger name as shown on ticket"></div><div class="field"><label>Airline Name</label><input data-ticket-field="airline" type="text" placeholder="Airline name"></div><div class="field"><label>Departure Airport</label><input data-ticket-field="departureAirport" type="text" placeholder="Airport name or code"></div><div class="field"><label>Arrival Airport</label><input data-ticket-field="arrivalAirport" type="text" placeholder="Airport name or code"></div><div class="field"><label>Departure Date</label><input data-ticket-field="departureDate" type="date"></div><div class="field"><label>Arrival Date</label><input data-ticket-field="arrivalDate" type="date"></div><div class="field full-width"><label>Baggage Allowance</label><div class="baggage-allowance-inputs" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><input data-ticket-field="baggageChecked" type="number" min="0" step="1" value="30" aria-label="Checked baggage kilograms" style="max-width:90px"><span>kg checked baggage +</span><input data-ticket-field="baggageHand" type="number" min="0" step="1" value="7" aria-label="Hand carry kilograms" style="max-width:90px"><span>kg hand carry</span></div></div></div>';
    root.appendChild(row);rows.push(row);
   }
-  row.querySelector('.ticket-passenger-heading').textContent='Ticket Info';
   const nameField=row.querySelector('[data-ticket-field="name"]');if(nameField)nameField.value=name;
  });
  rows.slice(names.length).forEach(row=>row.remove());
@@ -692,7 +690,7 @@ function populateTicketEntries(root,stored){
  for(let i=1;i<count;i++){
   if(!root.querySelectorAll('[data-ticket-row]')[i]){
    const row=document.createElement('div');row.className='ticket-passenger-row';row.setAttribute('data-ticket-row','');
-   row.innerHTML='<h4 class="ticket-passenger-heading"></h4><div class="generator-fields two-col"><div class="field"><label>Passenger Name</label><input data-ticket-field="name" type="text"></div><div class="field"><label>Airline Name</label><input data-ticket-field="airline" type="text"></div><div class="field"><label>Departure Airport</label><input data-ticket-field="departureAirport" type="text"></div><div class="field"><label>Arrival Airport</label><input data-ticket-field="arrivalAirport" type="text"></div><div class="field"><label>Departure Date</label><input data-ticket-field="departureDate" type="date"></div><div class="field"><label>Arrival Date</label><input data-ticket-field="arrivalDate" type="date"></div><div class="field full-width"><label>Baggage Allowance</label><input data-ticket-field="baggage" type="text"></div></div>';
+   row.innerHTML='<div class="generator-fields two-col"><div class="field"><label>Passenger Name</label><input data-ticket-field="name" type="text"></div><div class="field"><label>Airline Name</label><input data-ticket-field="airline" type="text"></div><div class="field"><label>Departure Airport</label><input data-ticket-field="departureAirport" type="text"></div><div class="field"><label>Arrival Airport</label><input data-ticket-field="arrivalAirport" type="text"></div><div class="field"><label>Departure Date</label><input data-ticket-field="departureDate" type="date"></div><div class="field"><label>Arrival Date</label><input data-ticket-field="arrivalDate" type="date"></div><div class="field full-width"><label>Baggage Allowance</label><div class="baggage-allowance-inputs" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><input data-ticket-field="baggageChecked" type="number" min="0" step="1" value="30" aria-label="Checked baggage kilograms" style="max-width:90px"><span>kg checked baggage +</span><input data-ticket-field="baggageHand" type="number" min="0" step="1" value="7" aria-label="Hand carry kilograms" style="max-width:90px"><span>kg hand carry</span></div></div></div>';
    root.appendChild(row);
   }
  }
@@ -701,8 +699,9 @@ function populateTicketEntries(root,stored){
   const entry=entries[index]||{};
   const nameField=row.querySelector('[data-ticket-field="name"]');
   if(nameField)nameField.value=names[index]||entry.name||'';
-  ['airline','departureAirport','arrivalAirport','departureDate','arrivalDate','baggage'].forEach(key=>{const field=row.querySelector('[data-ticket-field="'+key+'"]');if(field)field.value=entry[key]||'';});
-  const heading=row.querySelector('.ticket-passenger-heading');if(heading)heading.textContent='Ticket Info';
+  ['airline','departureAirport','arrivalAirport','departureDate','arrivalDate'].forEach(key=>{const field=row.querySelector('[data-ticket-field="'+key+'"]');if(field)field.value=entry[key]||'';});
+  const legacyBaggage=String(entry.baggage||'');const checked=entry.baggageChecked??(legacyBaggage.match(/(\\d+(?:\\.\\d+)?)(?=\\s*kg\\s*checked)/i)?.[1]||'30');const hand=entry.baggageHand??(legacyBaggage.match(/(\\d+(?:\\.\\d+)?)(?=\\s*kg\\s*hand)/i)?.[1]||'7');
+  const checkedField=row.querySelector('[data-ticket-field="baggageChecked"]'),handField=row.querySelector('[data-ticket-field="baggageHand"]');if(checkedField)checkedField.value=checked;if(handField)handField.value=hand;
  });
  const hidden=root.parentElement?.querySelector('textarea.ticket-info-hidden');if(hidden)hidden.value=JSON.stringify(readTicketEntries(root));
 }
@@ -779,7 +778,7 @@ const ticketEntries=readTicketEntries(document.querySelector('#generator .ticket
 const legacyTicketInfo=val('ticketInfo');
 document.getElementById('p_ticketInfo').innerHTML=ticketEntries.map((entry,index)=>{
  const fields=[['Passenger Name',entry.name],['Airline Name',entry.airline],['Departure Airport',entry.departureAirport],['Arrival Airport',entry.arrivalAirport],['Departure Date',entry.departureDate],['Arrival Date',entry.arrivalDate],['Baggage Allowance',entry.baggage]].filter(x=>x[1]);
- return fields.length?'<div class="accommodation-city-block"><h4>'+(entry.name?esc(entry.name):'Ticket Info')+'</h4><div class="accommodation-detail-grid">'+fields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div></div>':'';
+ return fields.length?'<div class="accommodation-city-block">'+(entry.name?'<h4>'+esc(entry.name)+'</h4>':'')+'<div class="accommodation-detail-grid">'+fields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div></div>':'';
 }).join('')+(legacyTicketInfo&&!ticketEntries.length?'<div class="content" style="margin-top:8px">'+esc(legacyTicketInfo)+'</div>':'');
 
 const passengerEntries=readPassengerEntries(document.querySelector('#generator .passenger-fields'));document.getElementById('p_passengers').textContent=passengerEntries.slice(1).map((x,i)=>'Passenger '+(i+2)+': '+[x.name,x.dob,x.phone,x.email].filter(Boolean).join(' · ')).join('\n');
