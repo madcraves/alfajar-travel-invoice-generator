@@ -306,7 +306,7 @@ textarea, select, [contenteditable="true"] {
  .passenger-entry-row .passenger-remove-button{grid-column:1;width:100%;}
 }
 
-/* v1.0.56 PDF pagination correction.
+/* Continuous single-page invoice PDF output.
    The preview modal is nested inside <main>; keep its parent visible and hide
    only the other application sections while producing the invoice PDF. */
 @media print {
@@ -348,13 +348,14 @@ textarea, select, [contenteditable="true"] {
   #printArea h4 { break-after:avoid-page!important;page-break-after:avoid!important; }
   #printArea .paperHead { padding-bottom:10px!important; }
   #printArea .invoice-title { margin:14px 0!important;font-size:18pt!important; }
+  #printArea, #printArea * { break-before:auto!important;break-after:auto!important; }
   #printArea .cell, #printArea .accommodation-detail-row,
   #printArea .accommodation-city-block, #printArea .passenger-detail-list,
   #printArea .invoice-disclaimer, #printArea .sig, #printArea .money,
-  #printArea .note { break-inside:avoid!important;page-break-inside:avoid!important; }
+  #printArea .note { break-inside:auto!important;page-break-inside:auto!important; }
   #printArea .terms { orphans:3;widows:3; }
   #printArea img { max-width:100%!important; }
-  @page { size:A4 portrait;margin:10mm; }
+  @page { margin:0; }
 }
 
 /* Sticky app navigation: keep all sections accessible while the content scrolls. */
