@@ -249,25 +249,28 @@ textarea, select, [contenteditable="true"] {
 /* Ensure hidden form fields never render as empty boxes when component CSS sets display. */
 [hidden]{display:none!important}
 
-/* Compact ticket-entry field sizing: keep the passenger name flexible while
-   sizing airline, airport and date controls to their actual content needs. */
-.ticket-passenger-row .generator-fields.two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px;align-items:start}
-.ticket-passenger-row .generator-fields.two-col>.field{min-width:0;max-width:100%;justify-self:start;width:100%}
-.ticket-passenger-row [data-ticket-field="airline"]{width:100%;max-width:110px!important}
-.ticket-passenger-row [data-ticket-field="departureAirport"],
-.ticket-passenger-row [data-ticket-field="arrivalAirport"]{width:100%;max-width:155px!important}
-.ticket-passenger-row [data-ticket-field="departureDate"],
-.ticket-passenger-row [data-ticket-field="arrivalDate"]{width:100%;max-width:165px!important}
-.ticket-passenger-row [data-ticket-field="baggageChecked"],
-.ticket-passenger-row [data-ticket-field="baggageHand"]{width:90px;max-width:90px!important}
-@media(max-width:600px){
- .ticket-passenger-row .generator-fields.two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 10px}
- .ticket-passenger-row [data-ticket-field="departureAirport"],
- .ticket-passenger-row [data-ticket-field="arrivalAirport"]{max-width:100%!important}
- .ticket-passenger-row [data-ticket-field="departureDate"],
- .ticket-passenger-row [data-ticket-field="arrivalDate"]{max-width:100%!important}
+/* Ticket information: one aligned horizontal row per passenger.
+   The row scrolls horizontally on narrow screens rather than breaking field alignment. */
+.ticket-info-fields{width:100%;overflow-x:auto;padding-bottom:4px}
+.ticket-passenger-row{min-width:1120px}
+.ticket-passenger-row .generator-fields.two-col{
+ display:grid;
+ grid-template-columns:minmax(150px,1.15fr) minmax(100px,.75fr) minmax(130px,1fr) minmax(130px,1fr) minmax(145px,1fr) minmax(145px,1fr) minmax(225px,1.55fr);
+ gap:0 10px;align-items:end;min-width:1120px
 }
-/* End compact ticket-entry field sizing */
+.ticket-passenger-row .generator-fields.two-col>.field{min-width:0;max-width:none;justify-self:stretch;width:100%;margin:0}
+.ticket-passenger-row .generator-fields.two-col>.field label{white-space:nowrap;font-size:11px}
+.ticket-passenger-row .generator-fields.two-col>.field input{width:100%;min-width:0;max-width:none!important;box-sizing:border-box}
+.ticket-passenger-row .generator-fields.two-col>.field.full-width{grid-column:auto}
+.ticket-passenger-row .baggage-allowance-inputs{flex-wrap:nowrap!important;gap:5px!important;white-space:nowrap}
+.ticket-passenger-row [data-ticket-field="baggageChecked"],
+.ticket-passenger-row [data-ticket-field="baggageHand"]{width:48px;max-width:48px!important;padding-left:5px;padding-right:5px}
+.ticket-passenger-row .baggage-allowance-inputs span{font-size:10px}
+@media(max-width:600px){
+ .ticket-passenger-row{min-width:1120px}
+ .ticket-passenger-row .generator-fields.two-col{grid-template-columns:minmax(150px,1.15fr) minmax(100px,.75fr) minmax(130px,1fr) minmax(130px,1fr) minmax(145px,1fr) minmax(145px,1fr) minmax(225px,1.55fr)}
+}
+/* End one-line ticket information layout */
 
 </style></head>
 <body>
