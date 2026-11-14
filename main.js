@@ -297,6 +297,7 @@ ipcMain.handle('save-pdf', async (event) => {
         const pdfData = await win.webContents.printToPDF({
             printBackground: true,
             pageSize: 'A4',
+            preferCSSPageSize: true,
             margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
         });
 
@@ -306,6 +307,23 @@ ipcMain.handle('save-pdf', async (event) => {
         throw new Error('PDF generation failed: ' + error.message);
     }
 });
+
+
+ // Render a PDF and return it to the app for an in-app preview (no external viewer).
+ ipcMain.handle('view-pdf', async (event) => {
+     const win = BrowserWindow.fromWebContents(event.sender);
+     try {
+         const pdfData = await win.webContents.printToPDF({
+             printBackground: true,
+             pageSize: 'A4',
+             preferCSSPageSize: true,
+             margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
+         });
+         return { success: true, pdfBase64: pdfData.toString('base64') };
+     } catch (error) {
+         throw new Error('Unable to generate invoice PDF: ' + error.message);
+     }
+ });
 
 // Print invoice directly
 ipcMain.handle('print-invoice', async (event) => {
