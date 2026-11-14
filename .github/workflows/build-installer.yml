@@ -13,7 +13,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Checkout v1.0.58 source
+      - name: Checkout v1.0.59 source
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -32,7 +32,7 @@ jobs:
       - name: Upload installer as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Alfajar-Travel-Invoice-Generator-Setup-1.0.58
+          name: Alfajar-Travel-Invoice-Generator-Setup-1.0.59
           path: |
             dist/*.exe
             dist/latest.yml
@@ -40,10 +40,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Replace installer on existing v1.0.58 GitHub Release
+      - name: Replace installer on existing v1.0.59 GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.58
+          tag_name: v1.0.59
           files: |
             dist/*.exe
             dist/latest.yml
