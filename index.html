@@ -1112,8 +1112,9 @@ setInvoices(a);showToast('Invoice '+data.inv+' saved on this computer.','success
 function invoiceDateKey(value){
  if(!value)return '';const raw=String(value).trim();
  if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
- const d=new Date(raw);if(!Number.isNaN(d.getTime()))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
- const m=raw.match(/^(\d{1,2})[\/. -](\d{1,2})[\/. -](\d{4})$/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';
+ const m=raw.match(/^(\d{1,2})[\/. -](\d{1,2})[\/. -](\d{4})$/);
+ if(m){const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);if(day>12)return year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');if(month>12)return year+'-'+String(day).padStart(2,'0')+'-'+String(month).padStart(2,'0');return year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
+ const d=new Date(raw);return Number.isNaN(d.getTime())?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 function resetInvoiceFilters(){['invoiceSearch','invoiceStatusFilter','invoiceDateFrom','invoiceDateTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id==='invoiceStatusFilter'?'all':''});renderInvoices()}
 function renderInvoices(){
@@ -1421,7 +1422,7 @@ function closeInvoicePreview(){const modal=document.getElementById('invoicePrevi
 function printNow(){updatePreview();showInvoicePreview();window.invoiceAPI.print()}
 async function viewInvoicePDF(button){updatePreview();showInvoicePreview();setButtonBusy(button,true,'Preparing PDF…');try{const result=await window.invoiceAPI.viewPDF();if(!result||!result.success||!result.pdfBase64)throw new Error(result?.error||'Could not generate the PDF.');const frame=document.getElementById('pdfViewerFrame');frame.src='data:application/pdf;base64,'+result.pdfBase64;document.getElementById('pdfViewerModal').hidden=false;document.body.style.overflow='hidden';showToast('PDF is ready to view.','success');}catch(error){showToast('Unable to open invoice PDF: '+(error.message||error),'error')}finally{setButtonBusy(button,false)}}
 function closePdfViewer(){const modal=document.getElementById('pdfViewerModal');modal.hidden=true;document.getElementById('pdfViewerFrame').src='about:blank';document.body.style.overflow='';}
-async function savePDF(button){updatePreview();showInvoicePreview();setButtonBusy(button,true,'Exporting…');try{await window.invoiceAPI.savePDF();showToast('PDF export completed.','success')}catch(error){showToast('PDF export failed: '+(error.message||error),'error')}finally{setButtonBusy(button,false)}}
+async function savePDF(button){updatePreview();showInvoicePreview();setButtonBusy(button,true,'Exporting…');try{const result=await window.invoiceAPI.savePDF();if(result?.canceled){showToast('PDF export cancelled.');return}showToast('PDF exported successfully.','success')}catch(error){showToast('PDF export failed: '+(error.message||error),'error')}finally{setButtonBusy(button,false)}}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
 ['invoiceSearch','invoiceStatusFilter','invoiceDateFrom','invoiceDateTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener(id==='invoiceSearch'?'input':'change',renderInvoices)});
 document.querySelector('#generator .visa-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
