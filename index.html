@@ -130,6 +130,14 @@ textarea, select, [contenteditable="true"] {
 .invoice-preview-toolbar h2{margin:0 0 4px;font-size:19px;font-weight:650}
 .invoice-preview-toolbar .actions{margin:0}
 .invoice-preview-dialog .paper{max-width:800px;margin:0 auto;min-height:0}
+.invoice-pdf-frame{display:none;width:100%;height:calc(92vh - 105px);min-height:420px;border:1px solid #d9e4df;border-radius:8px;background:#fff}
+.invoice-preview-dialog.pdf-ready{width:min(100%,1100px);height:min(92vh,900px);display:flex;flex-direction:column}
+.invoice-preview-dialog.pdf-ready .invoice-preview-toolbar .hint{display:none}
+.invoice-preview-dialog.pdf-ready .invoice-preview-toolbar .actions button:not(.ghost){display:none}
+.invoice-preview-dialog.pdf-ready .invoice-pdf-frame{display:block;flex:1;min-height:0}
+.invoice-preview-dialog.pdf-ready #printArea{display:none!important}
+@media(max-width:650px){.invoice-preview-dialog.pdf-ready{height:96vh}.invoice-preview-dialog.pdf-ready .invoice-pdf-frame{height:calc(96vh - 90px)}}
+
 .pdf-viewer-overlay{z-index:11000;padding:20px;align-items:center}
 .pdf-viewer-dialog{width:min(100%,1100px);height:min(92vh,900px);display:flex;flex-direction:column;background:#f5f7f6;border-radius:15px;padding:16px;box-shadow:0 24px 80px rgba(0,0,0,.3)}
 .pdf-viewer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 12px}
@@ -568,7 +576,7 @@ Alfajar Travel UK</textarea></div>
   <div class="generator-bottom-actions"><div><strong>Ready to create your invoice?</strong><p>Preview the document before saving or emailing it.</p></div><div class="actions"><button class="ghost" onclick="newInvoice()">Clear / New</button><button class="secondary" onclick="saveInvoice()">Save invoice</button><button onclick="showInvoicePreview()">Preview invoice</button></div></div>
 </div>
 </section>
-<div id="invoicePreviewModal" class="modal-overlay invoice-preview-overlay" hidden onclick="if(event.target===this)closeInvoicePreview()"><div class="invoice-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="invoicePreviewTitle"><div class="invoice-preview-toolbar no-print"><div><h2 id="invoicePreviewTitle">Invoice Preview</h2><p class="hint">Review the invoice before printing or exporting it.</p></div><div class="actions"><button class="ghost" onclick="closeInvoicePreview()">Close</button><button class="secondary" onclick="savePDF()">Export PDF</button><button onclick="printNow()">Print invoice</button></div></div><section class="paper" id="printArea">
+<div id="invoicePreviewModal" class="modal-overlay invoice-preview-overlay" hidden onclick="if(event.target===this)closeInvoicePreview()"><div class="invoice-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="invoicePreviewTitle"><div class="invoice-preview-toolbar no-print"><div><h2 id="invoicePreviewTitle">Invoice Preview</h2><p class="hint">Review the invoice before printing or exporting it.</p></div><div class="actions"><button class="ghost" onclick="closeInvoicePreview()">Close</button><button class="secondary" onclick="savePDF()">Export PDF</button><button onclick="printNow()">Print invoice</button></div></div><iframe id="invoicePdfFrame" class="invoice-pdf-frame" title="Generated invoice PDF"></iframe><section class="paper" id="printArea">
 <div class="paperHead"><img src="alfajar-logo.png" alt="Alfajar Travel"><div style="text-align:right"><h2>ALFAJAR TRAVEL UK</h2><div id="bizline" class="small"></div><div id="p_address" class="small"></div><div id="p_atol" class="small"></div></div></div>
 <div class="invoice-title">INVOICE</div>
 <h3>Invoice information</h3>
@@ -593,12 +601,6 @@ Alfajar Travel UK</textarea></div>
 <div class="sig">Customer signature: ____________________________________ &nbsp;&nbsp; Date: __________________</div>
 <div class="small" style="margin-top:14px">Alfajar Travel UK · <span id="p_footercontact"></span></div>
 </section></div></div>
-<div id="pdfViewerModal" class="modal-overlay pdf-viewer-overlay" hidden onclick="if(event.target===this)closePDFViewer()">
- <div class="pdf-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="pdfViewerTitle">
-  <div class="pdf-viewer-toolbar"><h2 id="pdfViewerTitle">Invoice PDF</h2><button class="ghost" type="button" onclick="closePDFViewer()">Close</button></div>
-  <iframe id="pdfViewerFrame" class="pdf-viewer-frame" title="Invoice PDF preview"></iframe>
- </div>
-</div>
 <section id="saved" class="tab">
 <div class="saved-panel">
 <div class="saved-head"><div><h2 style="margin-bottom:4px">Generated Invoices</h2><div class="hint">Search by invoice number, passenger, booking reference, phone or email. Payment status updates from payments and due dates.</div></div><button onclick="showTab('generator');newInvoice()">Create new invoice</button></div>
@@ -1104,17 +1106,27 @@ function prepareSavedInvoiceEmail(inv){
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
 async function viewSavedPDF(inv){
  const saved=invoices().find(x=>String(x.inv)===String(inv));if(!saved){alert('Invoice not found.');return;}
- applyInvoiceToForm(saved);updatePreview();showInvoicePreview();
+ applyInvoiceToForm(saved);updatePreview();
+ const modal=document.getElementById('invoicePreviewModal');
+ const dialog=modal.querySelector('.invoice-preview-dialog');
+ const frame=document.getElementById('invoicePdfFrame');
+ const title=document.getElementById('invoicePreviewTitle');
+ const hint=modal.querySelector('.invoice-preview-toolbar .hint');
+ dialog.classList.add('pdf-ready');
+ title.textContent='Invoice PDF · '+String(inv);
+ if(hint)hint.textContent='Loading generated invoice…';
+ frame.src='about:blank';
+ modal.hidden=false;document.body.style.overflow='hidden';
  try{
   const result=await window.invoiceAPI.viewPDF(inv);
   if(!result||!result.success||!result.pdfBase64)throw new Error(result?.error||'Could not generate the PDF.');
+  frame.src='data:application/pdf;base64,'+result.pdfBase64+'#toolbar=1&navpanes=0&view=FitH';
+  if(hint)hint.textContent='Generated invoice PDF';
+ }catch(error){
   closeInvoicePreview();
-  document.getElementById('pdfViewerTitle').textContent='Invoice PDF · '+String(inv);
-  document.getElementById('pdfViewerFrame').src='data:application/pdf;base64,'+result.pdfBase64+'#toolbar=1&navpanes=0&view=FitH';
-  document.getElementById('pdfViewerModal').hidden=false;document.body.style.overflow='hidden';
- }catch(error){closeInvoicePreview();alert('Unable to open invoice PDF: '+(error.message||error));}
+  alert('Unable to open invoice PDF: '+(error.message||error));
+ }
 }
-function closePDFViewer(){const modal=document.getElementById('pdfViewerModal');modal.hidden=true;document.getElementById('pdfViewerFrame').src='about:blank';document.body.style.overflow='';}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)setFieldValue(el,'')});
@@ -1268,7 +1280,7 @@ async function sendInvoiceEmail(){
 }
 
 function showInvoicePreview(){updatePreview();const modal=document.getElementById('invoicePreviewModal');modal.hidden=false;document.body.style.overflow='hidden';}
-function closeInvoicePreview(){const modal=document.getElementById('invoicePreviewModal');modal.hidden=true;document.body.style.overflow='';}
+function closeInvoicePreview(){const modal=document.getElementById('invoicePreviewModal');modal.hidden=true;const dialog=modal.querySelector('.invoice-preview-dialog');dialog?.classList.remove('pdf-ready');const frame=document.getElementById('invoicePdfFrame');if(frame)frame.src='about:blank';const title=document.getElementById('invoicePreviewTitle');if(title)title.textContent='Invoice Preview';const hint=modal.querySelector('.invoice-preview-toolbar .hint');if(hint)hint.textContent='Review the invoice before printing or exporting it.';document.body.style.overflow='';}
 function printNow(){updatePreview();showInvoicePreview();window.invoiceAPI.print()}
 async function savePDF(){updatePreview();showInvoicePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
