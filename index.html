@@ -405,13 +405,11 @@ Alfajar Travel UK</textarea></div>
   <div class="generator-layout">
     <div class="generator-main-column">
       <section class="generator-section">
-        <div class="generator-section-heading"><span class="section-number">01</span><div><h3>Invoice information</h3><p>Invoice and booking reference details</p></div></div>
+        <div class="generator-section-heading"><span class="section-number">01</span><div><h3>Invoice information</h3><p>Invoice details</p></div></div>
         <div class="generator-fields two-col">
           <div class="field"><label for="inv">Invoice number</label><input id="inv" placeholder="AT-2026-0001"></div>
           <div class="field"><label for="date">Invoice date</label><input id="date" placeholder="e.g. 13 Nov 2026"></div>
-          <div class="field"><label for="booking">Booking reference</label><input id="booking" placeholder="Enter booking reference"></div>
           <div class="field"><label for="bdate">Booking date</label><input id="bdate" placeholder="e.g. 11 Nov 2026"></div>
-          <div class="field"><label for="dueDate">Payment due date</label><input id="dueDate" type="date"></div>
         </div>
       </section>
       <section class="generator-section">
@@ -561,9 +559,7 @@ Alfajar Travel UK</textarea></div>
 <div class="invoice-meta-grid">
 <div class="invoice-meta-card"><div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Invoice number</span><strong id="p_inv"></strong></div></div></div>
 <div class="invoice-meta-card"><div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Invoice date</span><strong id="p_date"></strong></div></div></div>
-<div class="invoice-meta-card"><div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Booking reference</span><strong id="p_booking"></strong></div></div></div>
 <div class="invoice-meta-card"><div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Booking date</span><strong id="p_bdate"></strong></div></div></div>
-<div class="invoice-meta-card"><div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Payment due date</span><strong id="p_dueDate"></strong></div></div></div>
 </div>
 <div id="p_passengers" class="passenger-detail-list"></div>
 <h3>Ticket Info</h3><div class="content" id="p_ticketInfo"></div>
@@ -610,7 +606,7 @@ Alfajar Travel UK</textarea></div>
  </div>
 </div>
 <script>
-const ids=['inv','date','booking','bdate','dueDate','customer','dob','phone','leadEmail','passengers','visa','visaPassengerName','visaNationality','visaType','ticketPassengerName','ticketAirlineName','ticketDepartureAirport','ticketArrivalAirport','ticketDepartureDate','ticketArrivalDate','ticketBaggageAllowance','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
+const ids=['inv','date','bdate','customer','dob','phone','leadEmail','passengers','visa','visaPassengerName','visaNationality','visaType','ticketPassengerName','ticketAirlineName','ticketDepartureAirport','ticketArrivalAirport','ticketDepartureDate','ticketArrivalDate','ticketBaggageAllowance','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
 3. Airline schedules, baggage allowances, hotel facilities and check-in/check-out times are controlled by the relevant suppliers and may change.
@@ -869,7 +865,7 @@ function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Un
 function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#generator .passenger-fields')));d.visa=JSON.stringify(readVisaEntries(document.querySelector('#generator .visa-fields')));d.ticketInfo=JSON.stringify(readTicketEntries(document.querySelector('#generator .ticket-passenger-list')));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.transport=JSON.stringify(readGroundTransport(document.querySelector('#generator .ground-transport-fields')));d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
 function disclaimerMarkup(value){let html=esc(String(value||''));html=html.replace(/(\+44\s*7465\s*796629)/g,'<strong>$1</strong>');html=html.replace(/(book@alfajartravel\.co\.uk)/gi,'<strong>$1</strong>');return html;}
 function updatePreview(){
-const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
+const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
 ids.forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=val(id)});
 const ticketEntries=readTicketEntries(document.querySelector('#generator .ticket-passenger-list'));
 const legacyTicketInfo=val('ticketInfo');
@@ -941,12 +937,12 @@ const list=document.getElementById('invoiceList');if(!list)return;
 const query=(document.getElementById('invoiceSearch')?.value||'').trim().toLowerCase();
 const filter=(document.getElementById('invoiceStatusFilter')?.value||'all');
 const sorted=all.slice().sort((x,y)=>(y.createdAt||'').localeCompare(x.createdAt||''));
-const filtered=sorted.filter(x=>{const p=paymentInfo(x);const hay=[x.inv,x.customer,x.booking,x.phone,x.leadEmail].join(' ').toLowerCase();return (!query||hay.includes(query))&&(filter==='all'||p.status===filter)});
+const filtered=sorted.filter(x=>{const p=paymentInfo(x);const hay=[x.inv,x.customer,x.phone,x.leadEmail].join(' ').toLowerCase();return (!query||hay.includes(query))&&(filter==='all'||p.status===filter)});
 const summary=document.getElementById('invoiceResultsSummary');
 if(summary)summary.textContent='Showing '+filtered.length+' of '+all.length+' invoice'+(all.length===1?'':'s');
 if(!all.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use Invoice Generator to create and save your first invoice.</div>';return}
 if(!filtered.length){list.innerHTML='<div class="empty">No invoices match your search or payment filter.<br>Try another search term or select “All statuses”.</div>';return}
-list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+' · '+esc(x.booking||'No booking reference')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+(x.dueDate?' · Due: '+esc(x.dueDate):'')+'</div></div><div class="row-actions"><button onclick="editInvoice(decodeURIComponent(\''+key+'\'))">Edit invoice</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button onclick="prepareSavedInvoiceEmail(decodeURIComponent(\''+key+'\'))">Send Email</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
+list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(String(x.inv||''));return '<div class="invoice-row"><div><strong>'+esc(x.inv||'Untitled invoice')+'</strong> <span class="status-pill '+p.status+'">'+statusLabel(p.status)+'</span><div class="meta">'+esc(x.customer||'No passenger name')+' · '+esc(x.date||'No date')+'</div><div class="meta">Total: £'+p.total.toFixed(2)+' · Received: £'+p.received.toFixed(2)+' · Balance: £'+p.balance.toFixed(2)+'</div></div><div class="row-actions"><button onclick="editInvoice(decodeURIComponent(\''+key+'\'))">Edit invoice</button><button class="secondary" onclick="recordPayment(decodeURIComponent(\''+key+'\'))">Record payment</button><button onclick="prepareSavedInvoiceEmail(decodeURIComponent(\''+key+'\'))">Send Email</button><button class="ghost" onclick="printSaved(decodeURIComponent(\''+key+'\'))">Print / PDF</button><button class="danger" onclick="deleteInvoice(decodeURIComponent(\''+key+'\'))">Delete</button></div></div>'}).join('');
 }
 let pendingPaymentInvoice='';
 function recordPayment(inv){
@@ -1088,7 +1084,7 @@ function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(e
  populateTicketEntries(document.querySelector('#generator #ticketPassengerList'),val('ticketInfo'));
  populateVisaEntries(document.querySelector('#generator .visa-fields'),'');
   populateGroundTransport(document.querySelector('#generator .ground-transport-fields'),'');
-['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('disclaimer').value="We only accept fund transfers to the designated bank account details listed below. If you are requested to transfer funds to any other account, please do not proceed, as we cannot be held liable for any loss or inconvenience. In such circumstances, we advise you to promptly contact us at +44 7465 796629 or via email at book@alfajartravel.co.uk.";document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
+['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('disclaimer').value="We only accept fund transfers to the designated bank account details listed below. If you are requested to transfer funds to any other account, please do not proceed, as we cannot be held liable for any loss or inconvenience. In such circumstances, we advise you to promptly contact us at +44 7465 796629 or via email at book@alfajartravel.co.uk.";document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function setMailHealthItem(stateId, detailId, item){
