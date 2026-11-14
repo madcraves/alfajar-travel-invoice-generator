@@ -282,15 +282,43 @@ ipcMain.handle('send-invoice-email',async(event,payload)=>{
 });
 
 
-// Generate one continuous PDF page whose height follows the rendered invoice content.
+// Generate a continuous PDF page using the same printable width and typography as the PDF renderer.
 async function generateContinuousInvoicePdf(win) {
-    const measurement = await win.webContents.executeJavaScript(`(() => {
+    const measurement = await win.webContents.executeJavaScript(`(async () => {
         const invoice = document.getElementById('printArea');
         if (!invoice) throw new Error('Invoice preview is not available.');
-        return { height: Math.max(invoice.scrollHeight, invoice.offsetHeight, invoice.getBoundingClientRect().height) };
+
+        // Screen preview dimensions differ from the A4 PDF layout and include a 900 px
+        // minimum height. Measure at the actual printable width instead.
+        const style = document.createElement('style');
+        style.setAttribute('data-pdf-measurement', 'true');
+        style.textContent = [
+            '@media screen {',
+            '#invoicePreviewModal .invoice-preview-dialog { display:block!important;width:190mm!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important; }',
+            '#invoicePreviewModal #printArea { display:block!important;width:190mm!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;overflow:visible!important;font-size:9pt!important;line-height:1.35!important; }',
+            '#printArea h3 { margin:12px 0 6px!important;padding-bottom:5px!important;font-size:9pt!important; }',
+            '#printArea .paperHead { padding-bottom:10px!important; }',
+            '#printArea .invoice-title { margin:14px 0!important;font-size:18pt!important; }',
+            '}'
+        ].join('\\n');
+        document.head.appendChild(style);
+        try {
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            const rect = invoice.getBoundingClientRect();
+            return { height: Math.max(invoice.scrollHeight, invoice.offsetHeight, rect.height) };
+        } finally {
+            style.remove();
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
     })()`);
-    // Electron custom page sizes are expressed in microns. 210 mm wide, content-height page.
-    const heightMicrons = Math.min(5000000, Math.max(297000, Math.ceil(measurement.height * 264.583333) + 30000));
+
+    // CSS pixels at 96 DPI converted to microns. Keep original A4 width and margins.
+    // The 30 mm allowance covers page margins and renderer rounding; short invoices
+    // remain at least A4 height. The same helper is used for View, Export and Email PDFs.
+    const contentHeightMicrons = Math.ceil(measurement.height * 264.583333);
+    const heightMicrons = Math.min(5000000, Math.max(297000, contentHeightMicrons + 30000));
+
     return win.webContents.printToPDF({
         printBackground: true,
         pageSize: { width: 210000, height: heightMicrons },
