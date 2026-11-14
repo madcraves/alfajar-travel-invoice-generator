@@ -565,11 +565,11 @@ Alfajar Travel UK</textarea></div>
 <div class="cell"><b>Passenger email</b><span id="p_leadEmail"></span></div>
 <div class="cell" style="grid-column:1/-1"><b>Additional passengers</b><span id="p_passengers" class="content"></span></div>
 </div>
-<h3>Visa details</h3><div id="p_visa" class="accommodation-preview"></div>
 <h3>Ticket Info</h3><div class="content" id="p_ticketInfo"></div>
 <h3>Flight details</h3><div class="content" id="p_flights"></div>
 <h3>Accommodation</h3><div class="accommodation-city-block"><h4>Makkah</h4><div id="p_hotels" class="accommodation-preview"></div></div><div class="accommodation-city-block"><h4>Madinah</h4><div id="p_madinahHotels" class="accommodation-preview"></div></div>
 <h3>Ground transportation</h3><div class="content" id="p_transport"></div>
+<h3>Visa details</h3><div id="p_visa" class="accommodation-preview"></div>
 <h3>Payment summary</h3><div class="money">
 <div class="cell"><b>Total payable</b><span id="p_total"></span></div><div class="cell"><b>Amount received</b><span id="p_received"></span></div><div class="cell"><b>Other credit</b><span id="p_credit"></span></div><div class="cell"><b>Balance</b><span id="p_balance"></span></div></div><div class="small" style="margin-top:7px">Payment status: <strong id="p_paymentStatus"></strong></div>
 <h3>Special note</h3><div class="note content" id="p_note"></div>
@@ -654,7 +654,7 @@ function readTicketEntries(root){
  return [...root.querySelectorAll('[data-ticket-row]')].map(row=>{
   const get=key=>row.querySelector('[data-ticket-field="'+key+'"]')?.value.trim()||'';
   return {name:get('name'),airline:get('airline'),departureAirport:get('departureAirport'),arrivalAirport:get('arrivalAirport'),departureDate:get('departureDate'),arrivalDate:get('arrivalDate'),baggageChecked:get('baggageChecked')||'30',baggageHand:get('baggageHand')||'7',baggage:(get('baggageChecked')||'30')+' kg checked baggage + '+(get('baggageHand')||'7')+' kg hand carry'};
- });
+ }).filter(entry=>entry.name||entry.airline||entry.departureAirport||entry.arrivalAirport||entry.departureDate||entry.arrivalDate);
 }
 function syncTicketFields(root,passengerEntries){
  if(!root)return;
@@ -865,7 +865,7 @@ function paymentInfo(x){
  return {total,received,credit,balance,status:total<=0?'unpaid':balance<=0.009?'paid':overdue?'overdue':(received+credit)>0?'partial':'unpaid'};
 }
 function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Unpaid',overdue:'Overdue'})[s]||'Unpaid'}
-function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#generator .passenger-fields')));d.visa=JSON.stringify(readVisaEntries(document.querySelector('#generator .visa-fields')));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.transport=JSON.stringify(readGroundTransport(document.querySelector('#generator .ground-transport-fields')));d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
+function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#generator .passenger-fields')));d.visa=JSON.stringify(readVisaEntries(document.querySelector('#generator .visa-fields')));d.ticketInfo=JSON.stringify(readTicketEntries(document.querySelector('#generator .ticket-passenger-list')));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.transport=JSON.stringify(readGroundTransport(document.querySelector('#generator .ground-transport-fields')));d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
 function disclaimerMarkup(value){let html=esc(String(value||''));html=html.replace(/(\+44\s*7465\s*796629)/g,'<strong>$1</strong>');html=html.replace(/(book@alfajartravel\.co\.uk)/gi,'<strong>$1</strong>');return html;}
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
@@ -1021,28 +1021,41 @@ function closeInvoiceEdit(){
  document.body.style.overflow='';
  pendingEditInvoice='';
 }
+function accommodationSummaryFromPrefix(prefix,city){
+ const read=id=>{const el=document.getElementById(prefix+id);return el?(el.type==='checkbox'?el.checked:fieldValue(el)):''};
+ const name=read(city+'HotelName'),room=read(city+'RoomType'),inDate=read(city+'Checkin'),outDate=read(city+'Checkout');
+ const included=read(city+'MealIncluded'),meals=['Breakfast','Lunch','Dinner'].filter(meal=>read(city+meal));
+ const lines=[];
+ if(name)lines.push('Hotel Name: '+name);
+ if(room)lines.push('Room Type: '+room);
+ if(inDate)lines.push('Check-in: '+inDate);
+ if(outDate)lines.push('Check-out: '+outDate);
+ if(included)lines.push('Meal Included: Yes'+(meals.length?' — '+meals.join(', '):''));
+ else if(name||room||inDate||outDate)lines.push('Meal Included: No');
+ const legacy=read(city==='makkah'?'hotels':'madinahHotels');
+ return lines.length?lines.join('\\n'):legacy;
+}
 function saveInvoiceChanges(){
- const all=invoices(),index=all.findIndex(x=>String(x.inv)===pendingEditInvoice);
- if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');closeInvoiceEdit();return}
- const original=all[index],data={...original};
- ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});
- data.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields')));
- data.visa=JSON.stringify(readVisaEntries(document.querySelector('#invoiceEditFields .visa-fields')));
-  data.transport=JSON.stringify(readGroundTransport(document.querySelector('#invoiceEditFields .ground-transport-fields')));
-['makkah','madinah'].forEach(city=>{const p=city==='makkah'?'':'Madinah ';data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
- if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
- const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
- if(duplicate>=0){alert('Another invoice already uses invoice number '+data.inv+'. Please enter a unique invoice number.');document.getElementById('edit_inv')?.focus();return}
- const p=paymentInfo(data);
- data.balance=p.balance.toFixed(2);
- data.paymentStatus=p.status;
- data.updatedAt=new Date().toISOString();
- all[index]=data;
  try{
+  const all=invoices(),index=all.findIndex(x=>String(x.inv)===String(pendingEditInvoice));
+  if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');return}
+  const data={...all[index]};
+  ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});
+  data.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields')));
+  data.visa=JSON.stringify(readVisaEntries(document.querySelector('#invoiceEditFields .visa-fields')));
+  data.ticketInfo=JSON.stringify(readTicketEntries(document.querySelector('#invoiceEditFields .ticket-passenger-list')));
+  data.transport=JSON.stringify(readGroundTransport(document.querySelector('#invoiceEditFields .ground-transport-fields')));
+  ['makkah','madinah'].forEach(city=>{data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
+  if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
+  const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
+  if(duplicate>=0){alert('Another invoice already uses invoice number '+data.inv+'. Please enter a unique invoice number.');document.getElementById('edit_inv')?.focus();return}
+  const p=paymentInfo(data);
+  data.balance=p.balance.toFixed(2);data.paymentStatus=p.status;data.updatedAt=new Date().toISOString();
+  all[index]=data;
   setInvoices(all);
   closeInvoiceEdit();
   alert('Changes saved successfully for invoice '+data.inv+'.');
- }catch(error){alert('Could not save invoice changes: '+error.message)}
+ }catch(error){console.error('Save invoice changes failed:',error);alert('Could not save invoice changes: '+(error?.message||String(error)))}
 }
 function applyInvoiceToForm(d){
  ids.forEach(id=>{setFieldValue(document.getElementById(id),d[id])});
