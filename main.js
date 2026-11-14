@@ -267,7 +267,7 @@ ipcMain.handle('send-invoice-email',async(event,payload)=>{
  if(!settings.fromEmail||!settings.smtpHost||!settings.smtpUser||!settings.password)throw new Error('Please configure and save your Alfajar Travel email settings first.');
  if(!settings.imapHost||!settings.imapUser||!settings.imapPassword)throw new Error('Configure the Hostinger IMAP mailbox to archive sent invoices.');
  if(!payload||!/^\S+@\S+\.\S+$/.test(String(payload.to||'')))throw new Error('Enter a valid lead passenger email address.');
- const win=BrowserWindow.fromWebContents(event.sender),pdf=await win.webContents.printToPDF({printBackground:true,pageSize:'A4',margins:{top:0.35,bottom:0.35,left:0.35,right:0.35}});
+ const win=BrowserWindow.fromWebContents(event.sender),pdf=await generateContinuousInvoicePdf(win);
  const recipient=String(payload.to).trim(),subject=String(payload.subject||'Your Alfajar Travel invoice'),message=String(payload.message||'Please find your invoice attached. Thank you for booking with Alfajar Travel.'),attachment=String(payload.invoiceNumber||'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi,'-')+'.pdf';
  const transporter=nodemailer.createTransport({host:settings.smtpHost,port:Number(settings.smtpPort||465),secure:Boolean(settings.smtpSecure),auth:{user:settings.smtpUser,pass:settings.password}});
  await transporter.sendMail({from:{name:settings.fromName||'Alfajar Travel UK',address:settings.fromEmail},to:recipient,subject,text:message,attachments:[{filename:attachment,content:pdf,contentType:'application/pdf'}]});
@@ -280,6 +280,23 @@ ipcMain.handle('send-invoice-email',async(event,payload)=>{
  finally{try{await archiveClient.logout()}catch(_){}}
  return{sent:true,archived:true};
 });
+
+
+// Generate one continuous PDF page whose height follows the rendered invoice content.
+async function generateContinuousInvoicePdf(win) {
+    const measurement = await win.webContents.executeJavaScript(`(() => {
+        const invoice = document.getElementById('printArea');
+        if (!invoice) throw new Error('Invoice preview is not available.');
+        return { height: Math.max(invoice.scrollHeight, invoice.offsetHeight, invoice.getBoundingClientRect().height) };
+    })()`);
+    // Electron custom page sizes are expressed in microns. 210 mm wide, content-height page.
+    const heightMicrons = Math.min(5000000, Math.max(297000, Math.ceil(measurement.height * 264.583333) + 30000));
+    return win.webContents.printToPDF({
+        printBackground: true,
+        pageSize: { width: 210000, height: heightMicrons },
+        margins: { top: 0, bottom: 0, left: 0, right: 0 }
+    });
+}
 
 // Save invoice as PDF
 ipcMain.handle('save-pdf', async (event) => {
@@ -294,12 +311,7 @@ ipcMain.handle('save-pdf', async (event) => {
     if (canceled || !filePath) return { canceled: true };
 
     try {
-        const pdfData = await win.webContents.printToPDF({
-            printBackground: true,
-            pageSize: 'A4',
-            preferCSSPageSize: true,
-            margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
-        });
+        const pdfData = await generateContinuousInvoicePdf(win);
 
         fs.writeFileSync(filePath, pdfData);
         return { canceled: false, filePath };
@@ -313,12 +325,7 @@ ipcMain.handle('save-pdf', async (event) => {
  ipcMain.handle('view-pdf', async (event) => {
      const win = BrowserWindow.fromWebContents(event.sender);
      try {
-         const pdfData = await win.webContents.printToPDF({
-             printBackground: true,
-             pageSize: 'A4',
-             preferCSSPageSize: true,
-             margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
-         });
+         const pdfData = await generateContinuousInvoicePdf(win);
          return { success: true, pdfBase64: pdfData.toString('base64') };
      } catch (error) {
          throw new Error('Unable to generate invoice PDF: ' + error.message);
