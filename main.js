@@ -307,23 +307,19 @@ ipcMain.handle('save-pdf', async (event) => {
     }
 });
 
-// Generate the saved invoice PDF and open it in the default PDF viewer (never invoke printing).
-ipcMain.handle('view-pdf', async (event, invoiceNumber) => {
+// Generate the invoice PDF and return it to the renderer for the in-app PDF preview.
+ipcMain.handle('view-pdf', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     try {
         const pdfData = await win.webContents.printToPDF({
             printBackground: true,
             pageSize: 'A4',
-            margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 }
+            margins: { top: 0.35, bottom: 0.35, left: 0.35, right: 0.35 },
+            preferCSSPageSize: true
         });
-        const safeName = String(invoiceNumber || 'Alfajar-Invoice').replace(/[^a-z0-9-_]/gi, '-');
-        const filePath = path.join(app.getPath('temp'), safeName + '-' + Date.now() + '.pdf');
-        fs.writeFileSync(filePath, pdfData);
-        const openError = await shell.openPath(filePath);
-        if (openError) throw new Error(openError);
-        return { success: true, filePath };
+        return { success: true, pdfBase64: pdfData.toString('base64') };
     } catch (error) {
-        throw new Error('Unable to open invoice PDF: ' + error.message);
+        throw new Error('Unable to generate invoice PDF: ' + error.message);
     }
 });
 
