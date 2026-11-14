@@ -885,6 +885,8 @@ const groundTransport=readGroundTransport(document.querySelector('#generator .gr
  const transportFields=[['Provider',groundTransport.provider],['Pickup Date',groundTransport.pickupDate],['Pickup Point',groundTransport.pickupPoint],['Drop off Point',groundTransport.dropoffPoint],['Pickup Time',groundTransport.pickupTime],['Vehicle Type',groundTransport.vehicleType]].filter(x=>x[1]);
  document.getElementById('p_transport').innerHTML=transportFields.length?'<div class="accommodation-detail-grid">'+transportFields.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>':(val('transport')&&!String(val('transport')).trim().startsWith('{')?esc(val('transport')):'');
  document.getElementById('p_visa').innerHTML=visaMarkup();
+const othersValue=val('others').trim();
+document.getElementById('p_others').innerHTML=othersValue?'<div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Details</span><strong>'+esc(othersValue).replace(/\n/g,'<br>')+'</strong></div></div>':'';
 document.getElementById('p_hotels').innerHTML=accommodationMarkup('makkah');document.getElementById('p_madinahHotels').innerHTML=accommodationMarkup('madinah');
 ['total','received','credit','balance'].forEach(id=>{const el=document.getElementById('p_'+id);if(el)el.textContent=money(id)});
 document.getElementById('bizline').textContent=[val('bizphone'),val('bizemail')].filter(Boolean).join(' · ');
