@@ -244,6 +244,7 @@ textarea, select, [contenteditable="true"] {
 
 /* Clean, aligned accommodation details in the generated invoice */
 .accommodation-city-block{margin:10px 0 15px;break-inside:avoid}.accommodation-city-block h4{margin:0 0 8px;color:#214b43;font-size:12px;font-weight:750;letter-spacing:.025em}.accommodation-preview{border:1px solid #dfe9e4;border-radius:8px;overflow:hidden;background:#fff}.accommodation-detail-grid{display:grid;grid-template-columns:1fr 1fr}.accommodation-detail-row{display:grid;grid-template-columns:minmax(95px,.7fr) minmax(0,1.3fr);gap:9px;align-items:start;padding:9px 11px;border-bottom:1px solid #edf1ef;min-width:0}.accommodation-detail-row:nth-child(odd){background:#f8faf9}.accommodation-detail-row:nth-last-child(-n+2){border-bottom:0}.accommodation-detail-row span{font-size:10px;color:#667873;font-weight:650}.accommodation-detail-row strong{font-size:11px;color:#243b35;font-weight:650;overflow-wrap:anywhere}.accommodation-empty{padding:10px 12px;color:#87958f;font-size:10px;font-style:italic}@media(max-width:600px){.accommodation-detail-grid{grid-template-columns:1fr}.accommodation-detail-row:nth-last-child(2){border-bottom:1px solid #edf1ef}}
+.visa-fields{display:flex;flex-direction:column;gap:10px}.visa-passenger-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;padding:12px;border:1px solid var(--line,#dce5e1);border-radius:10px;background:#fff}.visa-passenger-row .field{min-width:0;margin:0}.visa-passenger-row input{width:100%;min-width:0;box-sizing:border-box}.visa-add-button{align-self:flex-start}.visa-remove-button{justify-self:start}@media(max-width:650px){.visa-passenger-row{grid-template-columns:1fr}}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
@@ -351,12 +352,17 @@ Alfajar Travel UK</textarea></div>
           <div class="field"><label for="phone">Passenger phone number</label><input id="phone" type="tel" placeholder="+44..."></div>
           <div class="field full-width"><label for="leadEmail">Passenger email address</label><input id="leadEmail" type="email" placeholder="passenger@example.com"></div>
           <div class="field full-width"><label for="passengers">Other passengers</label><textarea id="passengers" rows="3" placeholder="Enter one passenger name per line"></textarea></div>
-          <div class="field full-width"><label>Visa details</label><div class="generator-fields two-col visa-fields">
-            <div class="field"><label for="visaPassengerName">Passenger name</label><input id="visaPassengerName" placeholder="Enter passenger name"></div>
-            <div class="field"><label for="visaNationality">Nationality</label><input id="visaNationality" placeholder="e.g. British"></div>
-            <div class="field full-width"><label for="visaType">Visa Type</label><input id="visaType" placeholder="e.g. Umrah Visa"></div>
-            <textarea id="visa" hidden aria-hidden="true"></textarea>
-          </div></div>
+          <div class="field full-width"><label>Visa details</label>
+            <div class="visa-fields" id="visaPassengerList">
+              <div class="visa-passenger-row">
+                <div class="field"><label for="visaPassengerName">Passenger name</label><input id="visaPassengerName" data-visa-field="name" placeholder="Enter passenger name"></div>
+                <div class="field"><label for="visaNationality">Nationality</label><input id="visaNationality" data-visa-field="nationality" placeholder="e.g. British"></div>
+                <div class="field"><label for="visaType">Visa Type</label><input id="visaType" data-visa-field="type" placeholder="e.g. Umrah Visa"></div>
+              </div>
+              <button type="button" class="ghost visa-add-button" onclick="addVisaPassenger(this)">Add another passenger</button>
+              <textarea id="visa" hidden aria-hidden="true"></textarea>
+            </div>
+          </div>
         </div>
       </section>
       <section class="generator-section">
@@ -527,11 +533,58 @@ function accommodationMarkup(city){
  if(!values.length)return '<div class="accommodation-empty">Accommodation details not provided</div>';
  return '<div class="accommodation-detail-grid">'+values.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';
 }
+function readVisaEntries(root){
+ if(!root)return [];
+ return Array.from(root.querySelectorAll('.visa-passenger-row')).map(row=>({
+  name:row.querySelector('[data-visa-field="name"]')?.value.trim()||'',
+  nationality:row.querySelector('[data-visa-field="nationality"]')?.value.trim()||'',
+  type:row.querySelector('[data-visa-field="type"]')?.value.trim()||''
+ })).filter(x=>x.name||x.nationality||x.type);
+}
+function syncVisaFields(element){
+ const root=element?.matches?.('.visa-fields')?element:element?.closest?.('.visa-fields');if(!root)return;
+ const hidden=root.querySelector('textarea');if(hidden)hidden.value=JSON.stringify(readVisaEntries(root));
+ if(root.id==='visaPassengerList')updatePreview();
+}
+function removeVisaPassenger(button){
+ const root=button?.closest('.visa-fields');button?.closest('.visa-passenger-row')?.remove();if(root)syncVisaFields(root);
+}
+function addVisaPassenger(button){
+ const root=button?.closest('.visa-fields');if(!root)return;
+ const row=document.createElement('div');row.className='visa-passenger-row';
+ row.innerHTML='<div class="field"><label>Passenger name</label><input data-visa-field="name" placeholder="Enter passenger name"></div><div class="field"><label>Nationality</label><input data-visa-field="nationality" placeholder="e.g. British"></div><div class="field"><label>Visa Type</label><input data-visa-field="type" placeholder="e.g. Umrah Visa"></div><button type="button" class="ghost visa-remove-button" onclick="removeVisaPassenger(this)">Remove passenger</button>';
+ root.insertBefore(row,button);row.querySelector('input')?.focus();syncVisaFields(root);
+}
+function populateVisaEntries(root,stored){
+ if(!root)return;
+ root.querySelectorAll('.visa-passenger-row:not(:first-child)').forEach(row=>row.remove());
+ let entries=[];
+ try{const parsed=JSON.parse(String(stored||''));if(Array.isArray(parsed))entries=parsed;}catch{}
+ if(!entries.length){
+  const first=readVisaEntries(root)[0]||{};
+  if(first.name||first.nationality||first.type)entries=[first];
+  else if(stored){
+   const legacy=String(stored),vals={name:'',nationality:'',type:''};
+   legacy.split(/\r?\n|\\n/).forEach(line=>{const i=line.indexOf(':');if(i<0)return;const k=line.slice(0,i).trim().toLowerCase(),v=line.slice(i+1).trim();if(k.includes('passenger'))vals.name=v;else if(k.includes('national'))vals.nationality=v;else if(k.includes('visa'))vals.type=v;});
+   if(vals.name||vals.nationality||vals.type)entries=[vals];
+  }
+ }
+ const first=root.querySelector('.visa-passenger-row');
+ if(first){first.querySelector('[data-visa-field="name"]').value=entries[0]?.name||'';first.querySelector('[data-visa-field="nationality"]').value=entries[0]?.nationality||'';first.querySelector('[data-visa-field="type"]').value=entries[0]?.type||'';}
+ const button=root.querySelector('.visa-add-button');
+ entries.slice(1).forEach(entry=>{
+  const row=document.createElement('div');row.className='visa-passenger-row';
+  row.innerHTML='<div class="field"><label>Passenger name</label><input data-visa-field="name" placeholder="Enter passenger name"></div><div class="field"><label>Nationality</label><input data-visa-field="nationality" placeholder="e.g. British"></div><div class="field"><label>Visa Type</label><input data-visa-field="type" placeholder="e.g. Umrah Visa"></div><button type="button" class="ghost visa-remove-button" onclick="removeVisaPassenger(this)">Remove passenger</button>';
+  row.querySelector('[data-visa-field="name"]').value=entry.name||'';row.querySelector('[data-visa-field="nationality"]').value=entry.nationality||'';row.querySelector('[data-visa-field="type"]').value=entry.type||'';
+  root.insertBefore(row,button);
+ });
+ const hidden=root.querySelector('textarea');if(hidden)hidden.value=JSON.stringify(entries);
+}
 function visaMarkup(){
- const values=[['Passenger name',val('visaPassengerName')],['Nationality',val('visaNationality')],['Visa Type',val('visaType')]].filter(x=>x[1]);
- if(values.length)return '<div class="accommodation-detail-grid">'+values.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';
- const legacy=val('visa');
- if(legacy){const rows=[];legacy.replace(/\\\\n/g,'\\n').split(/\\r?\\n/).forEach(line=>{const i=line.indexOf(':');if(i>0)rows.push([line.slice(0,i).trim(),line.slice(i+1).trim()]);else if(line.trim())rows.push(['Details',line.trim()]);});if(rows.length)return '<div class="accommodation-detail-grid">'+rows.map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>';return '<div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Details</span><strong>'+esc(legacy)+'</strong></div></div>';}
+ const entries=readVisaEntries(document.querySelector('#generator .visa-fields'));
+ if(entries.length)return entries.map((entry,index)=>'<div class="accommodation-city-block"><h4>Passenger '+(index+1)+'</h4><div class="accommodation-detail-grid">'+[['Passenger name',entry.name],['Nationality',entry.nationality],['Visa Type',entry.type]].filter(x=>x[1]).map(([label,value])=>'<div class="accommodation-detail-row"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>').join('')+'</div></div>').join('');
+ const legacy=document.getElementById('visa')?.value||'';
+ if(legacy)return '<div class="accommodation-detail-grid"><div class="accommodation-detail-row"><span>Details</span><strong>'+esc(legacy)+'</strong></div></div>';
  return '<div class="accommodation-empty">Visa details not provided</div>';
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -544,7 +597,7 @@ function paymentInfo(x){
  return {total,received,credit,balance,status:total<=0?'unpaid':balance<=0.009?'paid':overdue?'overdue':(received+credit)>0?'partial':'unpaid'};
 }
 function statusLabel(s){return ({paid:'Paid',partial:'Partially paid',unpaid:'Unpaid',overdue:'Overdue'})[s]||'Unpaid'}
-function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
+function formData(){const d={};ids.forEach(id=>d[id]=fieldValue(document.getElementById(id)));d.visa=JSON.stringify(readVisaEntries(document.querySelector('#generator .visa-fields')));d.hotels=accommodationSummary('makkah');d.madinahHotels=accommodationSummary('madinah');d.createdAt=new Date().toISOString();const p=paymentInfo(d);d.balance=p.balance.toFixed(2);d.paymentStatus=p.status;return d}
 function disclaimerMarkup(value){let html=esc(String(value||''));html=html.replace(/(\+44\s*7465\s*796629)/g,'<strong>$1</strong>');html=html.replace(/(book@alfajartravel\.co\.uk)/gi,'<strong>$1</strong>');return html;}
 function updatePreview(){
 const pmt=paymentInfo({total:val('total'),received:val('received'),credit:val('credit'),dueDate:val('dueDate')});document.getElementById('balance').value=pmt.balance.toFixed(2);const ps=document.getElementById('p_paymentStatus');if(ps)ps.textContent=statusLabel(pmt.status);
@@ -635,6 +688,7 @@ function editInvoice(inv){
  clone.querySelectorAll('[for]').forEach(el=>{el.htmlFor='edit_'+el.htmlFor});
  host.replaceChildren(clone);
  ids.forEach(id=>{const field=document.getElementById('edit_'+id);setFieldValue(field,d[id])});
+ populateVisaEntries(document.querySelector('#invoiceEditFields .visa-fields'),d.visa);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById('edit_'+city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  const balance=paymentInfo(d).balance;
  const balanceField=document.getElementById('edit_balance');if(balanceField)balanceField.value=balance.toFixed(2);
@@ -654,6 +708,7 @@ function saveInvoiceChanges(){
  if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');closeInvoiceEdit();return}
  const original=all[index],data={...original};
  ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});
+ data.visa=JSON.stringify(readVisaEntries(document.querySelector('#invoiceEditFields .visa-fields')));
 ['makkah','madinah'].forEach(city=>{const p=city==='makkah'?'':'Madinah ';data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
  if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
  const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
@@ -671,6 +726,7 @@ function saveInvoiceChanges(){
 }
 function applyInvoiceToForm(d){
  ids.forEach(id=>{setFieldValue(document.getElementById(id),d[id])});
+ populateVisaEntries(document.querySelector('#generator .visa-fields'),d.visa);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  updatePreview();
 }
@@ -691,6 +747,7 @@ function printSaved(inv){loadInvoice(inv);printNow()}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)setFieldValue(el,'')});
+ populateVisaEntries(document.querySelector('#generator .visa-fields'),'');
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('disclaimer').value="We only accept fund transfers to the designated bank account details listed below. If you are requested to transfer funds to any other account, please do not proceed, as we cannot be held liable for any loss or inconvenience. In such circumstances, we advise you to promptly contact us at +44 7465 796629 or via email at book@alfajartravel.co.uk.";document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
@@ -841,6 +898,8 @@ function closeInvoicePreview(){const modal=document.getElementById('invoicePrevi
 function printNow(){updatePreview();showInvoicePreview();window.invoiceAPI.print()}
 async function savePDF(){updatePreview();showInvoicePreview();await window.invoiceAPI.savePDF()}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
+document.querySelector('#generator .visa-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
+document.getElementById('invoiceEditFields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
 newInvoice();renderInvoices();renderDashboard();loadEmailSettings();refreshMailHealth();
 document.getElementById('invoiceSearch')?.addEventListener('input',renderInvoices);
 document.getElementById('invoiceStatusFilter')?.addEventListener('change',renderInvoices);
