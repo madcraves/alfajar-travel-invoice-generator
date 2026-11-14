@@ -403,12 +403,70 @@ body > nav.no-print button:focus-visible{
  body > nav.no-print button{min-height:40px;padding:10px 13px;font-size:11px}
 }
 
+
+/* v1.0.56 professional interface refinement */
+body{background:#f3f6f5}
+body > nav.no-print{gap:7px;padding:10px clamp(12px,2vw,30px);box-shadow:0 8px 24px rgba(18,63,58,.09)}
+body > nav.no-print button{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:10px 15px;border-radius:10px;font-size:12px;letter-spacing:.005em}
+body > nav.no-print .nav-icon{display:inline-grid;place-items:center;width:20px;height:20px;font-size:16px;line-height:1;color:var(--green2)}
+body > nav.no-print button.active .nav-icon{color:#fff}
+body > nav.no-print button:not(.active):hover{background:#f1f6f3;border-color:#d7e4de;filter:none}
+#dashboard{max-width:1500px;margin:0 auto}
+.dashboard-intro{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:4px 0 18px;padding:8px 2px}
+.dashboard-intro .eyebrow{font-size:10px;font-weight:750;letter-spacing:.16em;color:#9b8138;margin-bottom:6px}
+.dashboard-intro h2{font-size:27px!important;font-weight:700!important;letter-spacing:-.045em!important;margin:0 0 5px!important;color:#183f39!important}
+.dashboard-intro p{margin:0;color:var(--muted);font-size:13px}
+#dashboard .dashboard-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+#dashboard .metric,#dashboard .dashboard-panel{border:1px solid #e0e9e4;border-radius:15px;background:linear-gradient(145deg,#fff 0%,#fbfdfc 100%);box-shadow:0 5px 18px rgba(22,63,55,.045);padding:20px}
+#dashboard .metric{position:relative;overflow:hidden;min-height:112px}
+#dashboard .metric:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:#c5a34a}
+#dashboard .metric:nth-child(2):before{background:#2d7b6e}
+#dashboard .metric:nth-child(3):before{background:#477e9a}
+#dashboard .metric:nth-child(4):before{background:#bd8a38}
+#dashboard .metric:nth-child(5):before{background:#36845d}
+#dashboard .metric:nth-child(6):before{background:#b65b52}
+#dashboard .metric-value{font-size:26px!important;font-weight:700!important;letter-spacing:-.04em!important;margin-top:8px;color:#1b4b42!important}
+#dashboard .metric .hint:first-child{font-size:10px;font-weight:700!important;letter-spacing:.1em!important;color:#7a8a84}
+#dashboard .dashboard-columns{grid-template-columns:minmax(0,1.5fr) minmax(260px,.8fr);gap:16px;margin-top:16px}
+#dashboard .dashboard-panel h2{font-size:16px!important}
+#dashboard #mailHealthPanel{border-radius:15px;padding:18px 20px;background:#fff}
+#dashboard .recent-row{padding:13px 0;border-bottom:1px solid #edf1ef}
+#dashboard .recent-row:last-child{border-bottom:0}
+#dashboard .recent-row .meta{color:#74847e}
+#dashboard .status-pill{display:inline-flex;align-items:center;white-space:nowrap}
+.invoice-filters{grid-template-columns:minmax(240px,2fr) minmax(150px,1fr) repeat(2,minmax(145px,1fr)) auto;align-items:end}
+.invoice-filters .field label{font-size:11px}
+.invoice-filters input,.invoice-filters select{min-height:42px}
+.invoice-filters .filter-reset{height:42px;white-space:nowrap}
+.invoice-row{border-radius:12px;box-shadow:0 2px 10px rgba(18,63,58,.035);transition:border-color .15s,transform .15s}
+.invoice-row:hover{border-color:#b8cec4;transform:translateY(-1px)}
+button{transition:background .15s,border-color .15s,transform .15s,opacity .15s}
+button:disabled{opacity:.62;cursor:wait;transform:none}
+button.is-loading{position:relative;padding-left:30px}
+button.is-loading:before{content:"";position:absolute;left:11px;top:50%;width:11px;height:11px;margin-top:-7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:appSpin .7s linear infinite}
+@keyframes appSpin{to{transform:rotate(360deg)}}
+.toast-region{position:fixed;right:22px;top:94px;z-index:20000;display:grid;gap:9px;width:min(390px,calc(100vw - 28px));pointer-events:none}
+.app-toast{display:flex;align-items:center;gap:11px;padding:13px 14px;border:1px solid #dbe7e0;border-left:4px solid #477d6b;border-radius:11px;background:#fff;color:#29433c;box-shadow:0 12px 34px rgba(15,42,35,.16);opacity:0;transform:translateY(-8px);transition:opacity .2s,transform .2s;pointer-events:auto;font-size:12px}
+.app-toast.visible{opacity:1;transform:translateY(0)}
+.app-toast.error{border-left-color:#b94c46}
+.app-toast.success{border-left-color:#2c8a5d}
+.toast-mark{display:grid;place-items:center;flex:0 0 23px;height:23px;border-radius:50%;background:#eaf3ee;color:#286b52;font-weight:800}
+.app-toast.error .toast-mark{background:#fff0ee;color:#a53c36}
+.toast-message{flex:1;line-height:1.45}
+.toast-close{padding:2px 6px;background:transparent;color:#71817b;font-size:19px}
+.toast-close:hover{background:#f0f4f2;filter:none}
+@media(max-width:1050px){.invoice-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.invoice-filters .filter-search{grid-column:1/-1}.invoice-filters .filter-reset{width:100%}}
+@media(max-width:800px){#dashboard .dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#dashboard .dashboard-columns{grid-template-columns:1fr}}
+@media(max-width:600px){.dashboard-intro{align-items:flex-start;flex-direction:column}.dashboard-intro h2{font-size:23px!important}#dashboard .dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#dashboard .metric{padding:14px;min-height:100px}#dashboard .metric-value{font-size:20px!important}.invoice-filters{grid-template-columns:1fr}.invoice-filters .filter-search{grid-column:1}.toast-region{right:14px;top:78px}}
+@media(max-width:390px){#dashboard .dashboard-grid{grid-template-columns:1fr}}
+@media print{.toast-region{display:none!important}}
 </style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
-<nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSentbox" onclick="showTab('sentbox')">5. Sentbox <span id="sentboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">6. Email Settings</button></nav>
+<nav class="no-print" aria-label="Main navigation"><button id="tabDashboard" class="active" onclick="showTab('dashboard')"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></button><button id="tabGenerator" onclick="showTab('generator')"><span class="nav-icon" aria-hidden="true">＋</span><span>1. Invoice Generator</span></button><button id="tabSaved" onclick="showTab('saved')"><span class="nav-icon" aria-hidden="true">▤</span><span>2. Generated Invoices</span> <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')"><span class="nav-icon" aria-hidden="true">✉</span><span>3. Email</span></button><button id="tabInbox" onclick="showTab('inbox')"><span class="nav-icon" aria-hidden="true">▣</span><span>4. Inbox</span> <span id="inboxCount"></span></button><button id="tabSentbox" onclick="showTab('sentbox')"><span class="nav-icon" aria-hidden="true">➤</span><span>5. Sentbox</span> <span id="sentboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')"><span class="nav-icon" aria-hidden="true">⚙</span><span>6. Email Settings</span></button></nav>
 <main>
 <section id="dashboard" class="tab active">
+<div class="dashboard-intro"><div><div class="eyebrow">ALFAJAR TRAVEL UK</div><h2>Business overview</h2><p>Track invoices, payments and mailbox health at a glance.</p></div><button class="ghost" onclick="showTab('generator');newInvoice()">＋ Create invoice</button></div>
 <div class="dashboard-panel" id="mailHealthPanel" style="margin-bottom:16px"><div class="saved-head"><div><h2 style="margin-bottom:4px">Email system status</h2><div class="hint" id="mailHealthChecked">Checking SMTP sending and IMAP receiving…</div></div><button class="ghost" id="refreshMailHealthBtn" onclick="refreshMailHealth()">Check Again</button></div><div class="grid" style="margin-top:12px"><div class="metric"><div class="hint">SENDING (SMTP)</div><div class="metric-value" id="smtpHealthState">Checking…</div><div class="hint" id="smtpHealthDetail">Testing outgoing mail server</div></div><div class="metric"><div class="hint">RECEIVING (IMAP)</div><div class="metric-value" id="imapHealthState">Checking…</div><div class="hint" id="imapHealthDetail">Testing incoming mail server</div></div></div><div class="hint" id="mailSetupOverall" style="margin-top:10px">Verifying mailbox configuration and connectivity.</div></div><div class="dashboard-grid">
 <div class="metric"><div class="hint">TOTAL INVOICES</div><div class="metric-value" id="metricInvoices">0</div><div class="hint">All saved bookings</div></div>
 <div class="metric"><div class="hint">TOTAL INVOICED</div><div class="metric-value" id="metricRevenue">£0.00</div><div class="hint">Value of all invoices</div></div>
@@ -433,7 +491,7 @@ Please find your Alfajar Travel invoice attached.
 
 Kind regards,
 Alfajar Travel UK</textarea></div>
-<div class="actions"><button onclick="sendInvoiceEmail()">Send Invoice Email</button></div>
+<div class="actions"><button onclick="sendInvoiceEmail(this)">Send Invoice Email</button></div>
 <p class="hint">The current invoice is attached as a PDF. Configure the Alfajar Travel sender account in the separate Email Settings section before sending.</p>
 
 
@@ -643,10 +701,10 @@ Alfajar Travel UK</textarea></div>
       <div class="generator-side-note"><span class="note-icon">i</span><div><strong>Before saving</strong><p>Review passenger details, payment amounts and company information. Customer records are stored locally on this computer.</p></div></div>
     </aside>
   </div>
-  <div class="generator-bottom-actions"><div><strong>Ready to create your invoice?</strong><p>Preview the document before saving or emailing it.</p></div><div class="actions"><button class="ghost" onclick="newInvoice()">Clear / New</button><button class="secondary" onclick="saveInvoice()">Save invoice</button><button onclick="showInvoicePreview()">Preview invoice</button></div></div>
+  <div class="generator-bottom-actions"><div><strong>Ready to create your invoice?</strong><p>Preview the document before saving or emailing it.</p></div><div class="actions"><button class="ghost" onclick="newInvoice()">Clear / New</button><button class="secondary" onclick="saveInvoice(this)">Save invoice</button><button onclick="showInvoicePreview()">Preview invoice</button></div></div>
 </div>
 </section>
-<div id="invoicePreviewModal" class="modal-overlay invoice-preview-overlay" hidden onclick="if(event.target===this)closeInvoicePreview()"><div class="invoice-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="invoicePreviewTitle"><div class="invoice-preview-toolbar no-print"><div><h2 id="invoicePreviewTitle">Invoice Preview</h2><p class="hint">Review the invoice before printing or exporting it.</p></div><div class="actions"><button class="ghost" onclick="closeInvoicePreview()">Close</button><button class="secondary" onclick="savePDF()">Export PDF</button><button onclick="viewInvoicePDF()">View PDF</button></div></div><section class="paper" id="printArea">
+<div id="invoicePreviewModal" class="modal-overlay invoice-preview-overlay" hidden onclick="if(event.target===this)closeInvoicePreview()"><div class="invoice-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="invoicePreviewTitle"><div class="invoice-preview-toolbar no-print"><div><h2 id="invoicePreviewTitle">Invoice Preview</h2><p class="hint">Review the invoice before printing or exporting it.</p></div><div class="actions"><button class="ghost" onclick="closeInvoicePreview()">Close</button><button class="secondary" onclick="savePDF(this)">Export PDF</button><button onclick="viewInvoicePDF(this)">View PDF</button></div></div><section class="paper" id="printArea">
 <div class="paperHead"><img src="alfajar-logo.png" alt="Alfajar Travel"><div style="text-align:right"><h2>ALFAJAR TRAVEL UK</h2><div id="bizline" class="small"></div><div id="p_address" class="small"></div><div id="p_atol" class="small"></div></div></div>
 <div class="invoice-title">INVOICE</div>
 <h3>Invoice information</h3>
@@ -675,9 +733,12 @@ Alfajar Travel UK</textarea></div>
 <section id="saved" class="tab">
 <div class="saved-panel">
 <div class="saved-head"><div><h2 style="margin-bottom:4px">Generated Invoices</h2><div class="hint">Search by invoice number, passenger, booking reference, phone or email. Payment status updates from payments and due dates.</div></div><button onclick="showTab('generator');newInvoice()">Create new invoice</button></div>
-<div class="filter-bar">
-<div class="field" style="margin:0"><label for="invoiceSearch">Search invoices</label><input id="invoiceSearch" type="search" placeholder="Invoice number, passenger, booking reference, phone or email"></div>
+<div class="filter-bar invoice-filters">
+<div class="field filter-search" style="margin:0"><label for="invoiceSearch">Search invoices</label><input id="invoiceSearch" type="search" placeholder="Invoice number, passenger, booking reference, phone or email"></div>
 <div class="field" style="margin:0"><label for="invoiceStatusFilter">Payment status</label><select id="invoiceStatusFilter" style="width:100%;padding:11px;border:1px solid #d6e1dc;border-radius:8px;background:#fff;color:var(--ink)"><option value="all">All statuses</option><option value="paid">Paid</option><option value="partial">Partially paid</option><option value="unpaid">Unpaid</option><option value="overdue">Overdue</option></select></div>
+<div class="field" style="margin:0"><label for="invoiceDateFrom">From date</label><input id="invoiceDateFrom" type="date"></div>
+<div class="field" style="margin:0"><label for="invoiceDateTo">To date</label><input id="invoiceDateTo" type="date"></div>
+<button type="button" class="ghost filter-reset" onclick="resetInvoiceFilters()">Reset filters</button>
 </div>
 <div class="hint" id="invoiceResultsSummary" style="margin:0 0 12px"></div>
 <div id="invoiceList" class="saved-list"></div>
@@ -701,7 +762,25 @@ Alfajar Travel UK</textarea></div>
   <div class="actions"><button type="button" onclick="submitRecordedPayment()">Save payment</button><button type="button" class="ghost" onclick="closePaymentModal()">Cancel</button></div>
  </div>
 </div>
+<div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 <script>
+function showToast(message,type='info'){
+ const host=document.getElementById('toastRegion');
+ if(!host){console.log(message);return}
+ const toast=document.createElement('div');toast.className='app-toast '+(type||'info');toast.setAttribute('role',type==='error'?'alert':'status');
+ const icon=type==='success'?'✓':type==='error'?'!':'i';
+ const mark=document.createElement('span');mark.className='toast-mark';mark.textContent=icon;
+ const copy=document.createElement('span');copy.className='toast-message';copy.textContent=String(message??'');
+ const close=document.createElement('button');close.type='button';close.className='toast-close';close.setAttribute('aria-label','Dismiss notification');close.textContent='×';close.onclick=()=>toast.remove();
+ toast.append(mark,copy,close);host.appendChild(toast);
+ requestAnimationFrame(()=>toast.classList.add('visible'));
+ const duration=type==='error'?6500:4200;setTimeout(()=>{toast.classList.remove('visible');setTimeout(()=>toast.remove(),220)},duration);
+}
+function setButtonBusy(button,busy,label){
+ if(!button)return;
+ if(busy){if(!button.dataset.originalText)button.dataset.originalText=button.textContent;button.disabled=true;button.classList.add('is-loading');button.textContent=label||'Please wait…'}
+ else{button.disabled=false;button.classList.remove('is-loading');if(button.dataset.originalText){button.textContent=button.dataset.originalText;delete button.dataset.originalText}}
+}
 const ids=['inv','date','bdate','customer','dob','phone','leadEmail','passengers','visa','visaPassengerName','visaNationality','visaType','others','ticketPassengerName','ticketAirlineName','ticketDepartureAirport','ticketArrivalAirport','ticketDepartureDate','ticketArrivalDate','ticketBaggageAllowance','ticketInfo','flights','hotels','madinahHotels','makkahHotelName','makkahRoomType','makkahCheckin','makkahCheckout','makkahMealIncluded','makkahBreakfast','makkahLunch','makkahDinner','madinahHotelName','madinahRoomType','madinahCheckin','madinahCheckout','madinahMealIncluded','madinahBreakfast','madinahLunch','madinahDinner','transport','total','received','credit','balance','note','terms','address','bizphone','bizemail','atol','bankName','accountName','accountNumber','sortCode','disclaimer'];
 const DEFAULT_TERMS=`1. Please check all passenger names, travel dates, flight details and accommodation details immediately. Notify Alfajar Travel of any errors before travel documents are issued.
 2. Flights, hotels, transfers and other travel services are subject to supplier confirmation and availability until confirmed in writing.
@@ -1024,19 +1103,27 @@ function hideEmptyInvoiceSections(){
  if(disclaimer)disclaimer.hidden=!(document.getElementById('p_disclaimer')?.textContent||'').trim();
 }
 function invoices(){try{return JSON.parse(localStorage.getItem('alfajarInvoices')||'[]')}catch(e){return []}}
-function setInvoices(a){try{localStorage.setItem('alfajarInvoices',JSON.stringify(a));renderInvoices();if(typeof renderDashboard==='function')renderDashboard()}catch(error){alert('Could not save invoice records. Your local storage may be full. Export a backup before removing old records.');throw error}}
-function saveInvoice(){
-updatePreview();const data=formData();if(!data.inv){alert('Please enter an invoice number.');return}
-data.balance=paymentInfo(data).balance.toFixed(2);data.paymentStatus=paymentInfo(data).status;const a=invoices();const i=a.findIndex(x=>x.inv===data.inv);if(i>=0){data.createdAt=a[i].createdAt||data.createdAt;a[i]=data}else a.unshift(data);
-setInvoices(a);alert('Invoice '+data.inv+' saved on this computer.');
+function setInvoices(a){try{localStorage.setItem('alfajarInvoices',JSON.stringify(a));renderInvoices();if(typeof renderDashboard==='function')renderDashboard()}catch(error){showToast('Could not save invoice records. Your local storage may be full. Export a backup before removing old records.');throw error}}
+function saveInvoice(button){
+updatePreview();const data=formData();if(!data.inv){showToast('Please enter an invoice number.','error');return}
+setButtonBusy(button,true,'Saving…');try{data.balance=paymentInfo(data).balance.toFixed(2);data.paymentStatus=paymentInfo(data).status;const a=invoices();const i=a.findIndex(x=>x.inv===data.inv);if(i>=0){data.createdAt=a[i].createdAt||data.createdAt;a[i]=data}else a.unshift(data);
+setInvoices(a);showToast('Invoice '+data.inv+' saved on this computer.','success');}catch(error){showToast('Could not save invoice: '+(error.message||error),'error')}finally{setButtonBusy(button,false)}
 }
+function invoiceDateKey(value){
+ if(!value)return '';const raw=String(value).trim();
+ if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
+ const d=new Date(raw);if(!Number.isNaN(d.getTime()))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ const m=raw.match(/^(\d{1,2})[\/. -](\d{1,2})[\/. -](\d{4})$/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';
+}
+function resetInvoiceFilters(){['invoiceSearch','invoiceStatusFilter','invoiceDateFrom','invoiceDateTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id==='invoiceStatusFilter'?'all':''});renderInvoices()}
 function renderInvoices(){
 const all=invoices();document.getElementById('savedCount').textContent=all.length?'('+all.length+')':'';
 const list=document.getElementById('invoiceList');if(!list)return;
 const query=(document.getElementById('invoiceSearch')?.value||'').trim().toLowerCase();
 const filter=(document.getElementById('invoiceStatusFilter')?.value||'all');
+const from=document.getElementById('invoiceDateFrom')?.value||'',to=document.getElementById('invoiceDateTo')?.value||'';
 const sorted=all.slice().sort((x,y)=>(y.createdAt||'').localeCompare(x.createdAt||''));
-const filtered=sorted.filter(x=>{const p=paymentInfo(x);const hay=[x.inv,x.customer,x.phone,x.leadEmail].join(' ').toLowerCase();return (!query||hay.includes(query))&&(filter==='all'||p.status===filter)});
+const filtered=sorted.filter(x=>{const p=paymentInfo(x);const hay=[x.inv,x.customer,x.phone,x.leadEmail,x.bookingRef,x.bookingReference,x.reference,x.ref].join(' ').toLowerCase();const date=invoiceDateKey(x.date||x.createdAt);return (!query||hay.includes(query))&&(filter==='all'||p.status===filter)&&(!from||(date&&date>=from))&&(!to||(date&&date<=to))});
 const summary=document.getElementById('invoiceResultsSummary');
 if(summary)summary.textContent='Showing '+filtered.length+' of '+all.length+' invoice'+(all.length===1?'':'s');
 if(!all.length){list.innerHTML='<div class="empty">No saved invoices yet.<br>Use Invoice Generator to create and save your first invoice.</div>';return}
@@ -1046,9 +1133,9 @@ list.innerHTML=filtered.map(x=>{const p=paymentInfo(x),key=encodeURIComponent(St
 let pendingPaymentInvoice='';
 function recordPayment(inv){
  const all=invoices(),index=all.findIndex(x=>String(x.inv)===String(inv));
- if(index<0){alert('Invoice record could not be found. Please refresh the invoice list and try again.');return}
+ if(index<0){showToast('Invoice record could not be found. Please refresh the invoice list and try again.');return}
  const current=all[index],p=paymentInfo(current);
- if(p.balance<=0.009){alert('This invoice is already fully paid.');return}
+ if(p.balance<=0.009){showToast('This invoice is already fully paid.');return}
  pendingPaymentInvoice=String(inv);
  document.getElementById('paymentModalInvoice').textContent='Invoice '+pendingPaymentInvoice;
  document.getElementById('paymentModalSummary').textContent='Already received: £'+p.received.toFixed(2)+' · Outstanding: £'+p.balance.toFixed(2);
@@ -1081,7 +1168,7 @@ function submitRecordedPayment(){
  try{
   setInvoices(all);
   closePaymentModal();
-  alert('Payment of £'+amount.toFixed(2)+' recorded for invoice '+current.inv+'.');
+  showToast('Payment of £'+amount.toFixed(2)+' recorded for invoice '+current.inv+'.');
  }catch(error){
   document.getElementById('paymentModalError').textContent='Could not save payment: '+error.message;
  }
@@ -1089,11 +1176,11 @@ function submitRecordedPayment(){
 let pendingEditInvoice='';
 function editInvoice(inv){
  const d=invoices().find(x=>String(x.inv)===String(inv));
- if(!d){alert('Invoice record could not be found. Please refresh the invoice list and try again.');return}
+ if(!d){showToast('Invoice record could not be found. Please refresh the invoice list and try again.');return}
  pendingEditInvoice=String(inv);
  const source=document.querySelector('#generator .generator-layout');
  const host=document.getElementById('invoiceEditFields');
- if(!source||!host){alert('Invoice editor could not be opened. Please restart the application.');return}
+ if(!source||!host){showToast('Invoice editor could not be opened. Please restart the application.');return}
  const clone=source.cloneNode(true);
  clone.querySelectorAll('[id]').forEach(el=>{el.id='edit_'+el.id});
  clone.querySelectorAll('[for]').forEach(el=>{el.htmlFor='edit_'+el.htmlFor});
@@ -1134,7 +1221,7 @@ function accommodationSummaryFromPrefix(prefix,city){
 function saveInvoiceChanges(){
  try{
   const all=invoices(),index=all.findIndex(x=>String(x.inv)===String(pendingEditInvoice));
-  if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');return}
+  if(index<0){showToast('This saved invoice could not be found. Refresh the invoice list and try again.');return}
   const data={...all[index]};
   ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});
   data.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields')));
@@ -1142,16 +1229,16 @@ function saveInvoiceChanges(){
   data.ticketInfo=JSON.stringify(readTicketEntries(document.querySelector('#invoiceEditFields .ticket-passenger-list')));
   data.transport=JSON.stringify(readGroundTransport(document.querySelector('#invoiceEditFields .ground-transport-fields')));
   ['makkah','madinah'].forEach(city=>{data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
-  if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
+  if(!data.inv){showToast('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
   const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
-  if(duplicate>=0){alert('Another invoice already uses invoice number '+data.inv+'. Please enter a unique invoice number.');document.getElementById('edit_inv')?.focus();return}
+  if(duplicate>=0){showToast('Another invoice already uses invoice number '+data.inv+'. Please enter a unique invoice number.');document.getElementById('edit_inv')?.focus();return}
   const p=paymentInfo(data);
   data.balance=p.balance.toFixed(2);data.paymentStatus=p.status;data.updatedAt=new Date().toISOString();
   all[index]=data;
   setInvoices(all);
   closeInvoiceEdit();
-  alert('Changes saved successfully for invoice '+data.inv+'.');
- }catch(error){console.error('Save invoice changes failed:',error);alert('Could not save invoice changes: '+(error?.message||String(error)))}
+  showToast('Changes saved successfully for invoice '+data.inv+'.');
+ }catch(error){console.error('Save invoice changes failed:',error);showToast('Could not save invoice changes: '+(error?.message||String(error)))}
 }
 function applyInvoiceToForm(d){
  ids.forEach(id=>{setFieldValue(document.getElementById(id),d[id])});
@@ -1243,14 +1330,14 @@ async function importBackup(event){
  const replace=confirm('Choose OK to REPLACE current invoices. Choose Cancel to MERGE this backup with current invoices.');
  const merged=new Map((replace?[]:invoices()).map(x=>[String(x.inv),x]));data.invoices.forEach(x=>merged.set(String(x.inv),x));
  const combined=Array.from(merged.values());if(!confirm('Restore '+data.invoices.length+' invoices?'))return;
- setInvoices(combined);renderDashboard();alert('Backup restored successfully. '+combined.length+' invoices are now available.');
- }catch(error){alert('Could not restore backup: '+error.message)}finally{event.target.value=''}
+ setInvoices(combined);renderDashboard();showToast('Backup restored successfully. '+combined.length+' invoices are now available.');
+ }catch(error){showToast('Could not restore backup: '+error.message)}finally{event.target.value=''}
 }
 function checkForUpdates(){
  const b=document.getElementById('checkUpdatesBtn');
  b.disabled=true;b.textContent='Checking...';
- window.invoiceAPI.checkForUpdates().then(r=>{if(r&&r.message)alert(r.message);})
- .catch(e=>alert('Could not check for updates: '+e.message))
+ window.invoiceAPI.checkForUpdates().then(r=>{if(r&&r.message)showToast(r.message);})
+ .catch(e=>showToast('Could not check for updates: '+e.message))
  .finally(()=>{b.disabled=false;b.textContent='Check for Updates'});
 }
 async function loadEmailSettings(){
@@ -1275,9 +1362,9 @@ async function saveEmailSettings(){
   await window.invoiceAPI.saveEmailSettings(settings);
   document.getElementById('mailboxPass').value='';
 
-  alert('Alfajar Travel email settings saved securely.');
+  showToast('Alfajar Travel email settings saved securely.');
   await loadEmailSettings();
- }catch(e){alert('Could not save email settings: '+e.message)}
+ }catch(e){showToast('Could not save email settings: '+e.message)}
 }
 let inboxMessages=[];
 let inboxLoaded=false;
@@ -1303,14 +1390,15 @@ async function refreshInbox(){
  finally{b.disabled=false;b.textContent='Refresh Inbox'}
 }
 async function downloadInboxAttachment(id){
- try{const result=await window.invoiceAPI.saveInboxAttachment(id);if(!result.canceled)alert('Attachment saved successfully.')}
- catch(e){alert('Could not save attachment: '+e.message)}
+ try{const result=await window.invoiceAPI.saveInboxAttachment(id);if(!result.canceled)showToast('Attachment saved successfully.')}
+ catch(e){showToast('Could not save attachment: '+e.message)}
 }
-async function sendInvoiceEmail(){
+async function sendInvoiceEmail(button){
  const to=val('emailTo')||val('leadEmail');
- if(!to){alert('Enter the passenger email address first.');return;}
- if(!val('inv')){alert('Please select or enter an invoice first.');return;}
+ if(!to){showToast('Enter the passenger email address first.');return;}
+ if(!val('inv')){showToast('Please select or enter an invoice first.');return;}
  const previousTab=document.querySelector('.tab.active')?.id||'email';
+ setButtonBusy(button,true,'Sending…');
  try{
   updatePreview();
   // The main process creates the PDF from the currently visible page.
@@ -1324,17 +1412,18 @@ async function sendInvoiceEmail(){
   const sendResult=await window.invoiceAPI.sendInvoiceEmail({to,subject:finalSubject,message:val('emailMessage'),invoiceNumber:val('inv')});
   closeInvoicePreview();
   showTab(previousTab);
-  alert('Invoice '+val('inv')+' emailed successfully to '+to+'.'+(sendResult?.archived?' A copy is saved in Hostinger Sent.':' WARNING: Email was sent, but it could not be copied to Hostinger Sent. '+(sendResult?.archiveError||'Please check the mailbox connection.')));
- }catch(e){closeInvoicePreview();showTab(previousTab);alert('Email could not be sent: '+e.message)}
+  showToast('Invoice '+val('inv')+' emailed successfully to '+to+'.'+(sendResult?.archived?' A copy is saved in Hostinger Sent.':' WARNING: Email was sent, but it could not be copied to Hostinger Sent. '+(sendResult?.archiveError||'Please check the mailbox connection.')),sendResult?.archived?'success':'info');
+ }catch(e){closeInvoicePreview();showTab(previousTab);showToast('Email could not be sent: '+e.message,'error')}finally{setButtonBusy(button,false)}
 }
 
 function showInvoicePreview(){updatePreview();const modal=document.getElementById('invoicePreviewModal');modal.hidden=false;document.body.style.overflow='hidden';}
 function closeInvoicePreview(){const modal=document.getElementById('invoicePreviewModal');modal.hidden=true;document.body.style.overflow='';}
 function printNow(){updatePreview();showInvoicePreview();window.invoiceAPI.print()}
-async function viewInvoicePDF(){updatePreview();showInvoicePreview();try{const result=await window.invoiceAPI.viewPDF();if(!result||!result.success||!result.pdfBase64)throw new Error(result?.error||'Could not generate the PDF.');const frame=document.getElementById('pdfViewerFrame');frame.src='data:application/pdf;base64,'+result.pdfBase64;document.getElementById('pdfViewerModal').hidden=false;document.body.style.overflow='hidden';}catch(error){alert('Unable to open invoice PDF: '+(error.message||error));}}
+async function viewInvoicePDF(button){updatePreview();showInvoicePreview();setButtonBusy(button,true,'Preparing PDF…');try{const result=await window.invoiceAPI.viewPDF();if(!result||!result.success||!result.pdfBase64)throw new Error(result?.error||'Could not generate the PDF.');const frame=document.getElementById('pdfViewerFrame');frame.src='data:application/pdf;base64,'+result.pdfBase64;document.getElementById('pdfViewerModal').hidden=false;document.body.style.overflow='hidden';showToast('PDF is ready to view.','success');}catch(error){showToast('Unable to open invoice PDF: '+(error.message||error),'error')}finally{setButtonBusy(button,false)}}
 function closePdfViewer(){const modal=document.getElementById('pdfViewerModal');modal.hidden=true;document.getElementById('pdfViewerFrame').src='about:blank';document.body.style.overflow='';}
-async function savePDF(){updatePreview();showInvoicePreview();await window.invoiceAPI.savePDF()}
+async function savePDF(button){updatePreview();showInvoicePreview();setButtonBusy(button,true,'Exporting…');try{await window.invoiceAPI.savePDF();showToast('PDF export completed.','success')}catch(error){showToast('PDF export failed: '+(error.message||error),'error')}finally{setButtonBusy(button,false)}}
 ids.forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
+['invoiceSearch','invoiceStatusFilter','invoiceDateFrom','invoiceDateTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener(id==='invoiceSearch'?'input':'change',renderInvoices)});
 document.querySelector('#generator .visa-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-visa-field]'))syncVisaFields(event.target)});
 document.querySelector('#generator .passenger-fields')?.addEventListener('input',event=>{if(event.target.matches('[data-passenger-field]'))syncPassengerFields(event.target)});
 document.querySelector('#generator .ground-transport-fields')?.addEventListener('input',()=>{const hidden=document.getElementById('transport');if(hidden)hidden.value=JSON.stringify(readGroundTransport(document.querySelector('#generator .ground-transport-fields')));updatePreview();});
