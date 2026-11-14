@@ -325,7 +325,7 @@ textarea, select, [contenteditable="true"] {
  .passenger-entry-row .passenger-add-button,
  .passenger-entry-row .passenger-remove-button{grid-column:1;width:100%;}
 }
-</style></head>
+\n/* PDF output must contain only the invoice preview, never the generator or app navigation. */\n@media print{\n #generator.tab{display:none!important}\n #dashboard.tab,#email.tab,#saved.tab,#inbox.tab,#sentbox.tab,#settings.tab{display:none!important}\n #invoicePreviewModal{display:block!important}\n #invoicePreviewModal .invoice-preview-toolbar{display:none!important}\n #invoicePreviewModal #printArea{display:block!important}\n}\n</style></head>
 <body>
 <header class="top"><img src="alfajar-logo.png" alt="Alfajar Travel logo"><div><h1>Alfajar Travel UK</h1><p>Invoice Manager · Offline desktop application</p></div><div class="header-spacer"></div><div class="header-actions no-print"><span id="updateStatus" class="status-line"></span><button class="ghost" id="checkUpdatesBtn" onclick="checkForUpdates()">Check for Updates</button></div></header>
 <nav class="no-print"><button id="tabDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button><button id="tabGenerator" onclick="showTab('generator')">1. Invoice Generator</button><button id="tabSaved" onclick="showTab('saved')">2. Generated Invoices <span id="savedCount"></span></button><button id="tabEmail" onclick="showTab('email')">3. Email</button><button id="tabInbox" onclick="showTab('inbox')">4. Inbox <span id="inboxCount"></span></button><button id="tabSentbox" onclick="showTab('sentbox')">5. Sentbox <span id="sentboxCount"></span></button><button id="tabSettings" onclick="showTab('settings')">6. Email Settings</button></nav>
@@ -1104,7 +1104,7 @@ function prepareSavedInvoiceEmail(inv){
 function deleteInvoice(inv){if(!confirm('Delete saved invoice '+inv+'? This cannot be undone.'))return;setInvoices(invoices().filter(x=>x.inv!==inv))}
 async function viewSavedPDF(inv){
  const saved=invoices().find(x=>String(x.inv)===String(inv));if(!saved){alert('Invoice not found.');return;}
- applyInvoiceToForm(saved);showTab('generator');updatePreview();showInvoicePreview();
+ applyInvoiceToForm(saved);updatePreview();showInvoicePreview();
  try{
   const result=await window.invoiceAPI.viewPDF(inv);
   if(!result||!result.success||!result.pdfBase64)throw new Error(result?.error||'Could not generate the PDF.');
