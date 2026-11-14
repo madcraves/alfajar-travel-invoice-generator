@@ -1,0 +1,47 @@
+name: Build and publish Alfajar Travel Invoice Generator
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout v1.0.56 source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Windows installer
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Upload installer as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Alfajar-Travel-Invoice-Generator-Setup-1.0.56
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Replace installer on existing v1.0.56 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.56
+          files: dist/*.exe
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
