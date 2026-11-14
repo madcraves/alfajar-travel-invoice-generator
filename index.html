@@ -794,7 +794,8 @@ function editInvoice(inv){
  clone.querySelectorAll('[for]').forEach(el=>{el.htmlFor='edit_'+el.htmlFor});
  host.replaceChildren(clone);
  ids.forEach(id=>{const field=document.getElementById('edit_'+id);setFieldValue(field,d[id])});
- populatePassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields'),d.passengers);\n populateVisaEntries(document.querySelector('#invoiceEditFields .visa-fields'),d.visa);
+ populatePassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields'),d.passengers);
+ populateVisaEntries(document.querySelector('#invoiceEditFields .visa-fields'),d.visa);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById('edit_'+city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  const balance=paymentInfo(d).balance;
  const balanceField=document.getElementById('edit_balance');if(balanceField)balanceField.value=balance.toFixed(2);
@@ -814,7 +815,8 @@ function saveInvoiceChanges(){
  if(index<0){alert('This saved invoice could not be found. Refresh the invoice list and try again.');closeInvoiceEdit();return}
  const original=all[index],data={...original};
  ids.forEach(id=>{const field=document.getElementById('edit_'+id);if(field)data[id]=fieldValue(field)});
- data.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields')));\n data.visa=JSON.stringify(readVisaEntries(document.querySelector('#invoiceEditFields .visa-fields')));
+ data.passengers=JSON.stringify(readPassengerEntries(document.querySelector('#invoiceEditFields .passenger-fields')));
+ data.visa=JSON.stringify(readVisaEntries(document.querySelector('#invoiceEditFields .visa-fields')));
 ['makkah','madinah'].forEach(city=>{const p=city==='makkah'?'':'Madinah ';data[city==='makkah'?'hotels':'madinahHotels']=accommodationSummaryFromPrefix('edit_',city)});
  if(!data.inv){alert('Invoice number is required.');document.getElementById('edit_inv')?.focus();return}
  const duplicate=all.findIndex((x,i)=>i!==index&&String(x.inv)===String(data.inv));
@@ -832,7 +834,8 @@ function saveInvoiceChanges(){
 }
 function applyInvoiceToForm(d){
  ids.forEach(id=>{setFieldValue(document.getElementById(id),d[id])});
- populatePassengerEntries(document.querySelector('#generator .passenger-fields'),d.passengers);\n populateVisaEntries(document.querySelector('#generator .visa-fields'),d.visa);
+ populatePassengerEntries(document.querySelector('#generator .passenger-fields'),d.passengers);
+ populateVisaEntries(document.querySelector('#generator .visa-fields'),d.visa);
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});
  updatePreview();
 }
@@ -853,7 +856,8 @@ function printSaved(inv){loadInvoice(inv);printNow()}
 function showTab(which){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(which).classList.add('active');['dashboard','email','generator','saved','inbox','sentbox','settings'].forEach(id=>{const b=document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));if(b)b.classList.toggle('active',which===id)});if(which==='saved')renderInvoices();if(which==='dashboard')renderDashboard();if(which==='settings')loadEmailSettings();if(which==='inbox'&&!inboxLoaded)refreshInbox();if(which==='sentbox')refreshSentbox()}
 function nextInvoiceNumber(){const y=new Date().getFullYear();const a=invoices();let max=0;a.forEach(x=>{const m=String(x.inv||'').match(new RegExp('^AT-'+y+'-(\\d+)$'));if(m)max=Math.max(max,Number(m[1]))});return 'AT-'+y+'-'+String(max+1).padStart(4,'0')}
 function newInvoice(){ids.forEach(id=>{const el=document.getElementById(id);if(el)setFieldValue(el,'')});
- populatePassengerEntries(document.querySelector('#generator .passenger-fields'),'');\n populateVisaEntries(document.querySelector('#generator .visa-fields'),'');
+ populatePassengerEntries(document.querySelector('#generator .passenger-fields'),'');
+ populateVisaEntries(document.querySelector('#generator .visa-fields'),'');
 ['makkah','madinah'].forEach(city=>{const checkbox=document.getElementById(city+'MealIncluded');if(checkbox)toggleMealOptions(checkbox)});document.getElementById('inv').value=nextInvoiceNumber();document.getElementById('date').value=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('dueDate').value='';document.getElementById('dueDate').value='';document.getElementById('terms').value=DEFAULT_TERMS;document.getElementById('disclaimer').value="We only accept fund transfers to the designated bank account details listed below. If you are requested to transfer funds to any other account, please do not proceed, as we cannot be held liable for any loss or inconvenience. In such circumstances, we advise you to promptly contact us at +44 7465 796629 or via email at book@alfajartravel.co.uk.";document.getElementById('emailTo').value='';document.getElementById('bizphone').value='+44 7465 796629';document.getElementById('bizemail').value='book@alfajartravel.co.uk';['total','received','credit','balance'].forEach(id=>document.getElementById(id).value='0');updatePreview()}
 
 function formatGBP(value){return '£'+Number(value||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
