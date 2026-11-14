@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('invoiceAPI', {
     savePDF: () => ipcRenderer.invoke('save-pdf'),
+    viewPDF: () => ipcRenderer.invoke('view-pdf'),
     print: () => ipcRenderer.invoke('print-invoice'),
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates-manual'),
     onUpdateStatus: (callback) => ipcRenderer.on('update-status', (_event, status) => callback(status)),
